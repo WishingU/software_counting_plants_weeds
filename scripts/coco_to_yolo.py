@@ -1,0 +1,110 @@
+"""Convert the COCO-format plant/weed dataset into YOLO format for counting.
+
+Reads the 5 date-based *_combined_train.json / *_combined_val.json files
+(the clean, non-overlapping canonical split) and writes a YOLO-style dataset:
+one image copy + one label .txt per image, with the 4 original species
+collapsed into 2 counting classes - 'crop' (wheat) and 'weed' (wild oat,
+brome grass, barley grass) - since this stage counts plants and weeds
+separately but doesn't yet identify weed species (that's step 2).
+
+Source data is expected at ~/Downloads/training_data/train (not tracked in
+git - see .gitignore). Output goes to data/yolo/ inside this repo, also not
+tracked in git except for the small data.yaml config.
+"""
+
+import json
+import shutil
+from pathlib import Path
+
+SOURCE_DIR = Path.home() / "Downloads" / "training_data" / "train"
+# A second folder holding extra images for the 20230526 date that aren't in SOURCE_DIR.
+EXTRA_SOURCE_DIR = Path.home() / "Downloads" / "training_data" / "train 2"
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "yolo"
+
+DATES = ["20230523", "20230526", "20230530", "20230602", "20230720"]
+SPLITS = ["train", "val"]
+
+# Original COCO category name -> merged counting class id/name
+CLASS_NAMES = ["crop", "weed"]
+CATEGORY_NAME_TO_CLASS_ID = {
+    "wheat": 0,
+    "wild oat": 1,
+    "brome grass": 1,
+    "barley grass": 1,
+}
+
+
+def convert_split(date: str, split: str) -> None:
+    json_path = SOURCE_DIR / f"{date}_combined_{split}.json"
+    coco = json.loads(json_path.read_text())
+
+    category_id_to_class_id = {
+        cat["id"]: CATEGORY_NAME_TO_CLASS_ID[cat["name"]] for cat in coco["categories"]
+    }
+
+    images_by_id = {img["id"]: img for img in coco["images"]}
+    anns_by_image = {}
+    for ann in coco["annotations"]:
+        anns_by_image.setdefault(ann["image_id"], []).append(ann)
+
+    img_out_dir = OUTPUT_DIR / "images" / split
+    lbl_out_dir = OUTPUT_DIR / "labels" / split
+    img_out_dir.mkdir(parents=True, exist_ok=True)
+    lbl_out_dir.mkdir(parents=True, exist_ok=True)
+
+    n_images, n_missing = 0, 0
+    n_boxes_by_class = {0: 0, 1: 0}
+    for image_id, img in images_by_id.items():
+        src_img_path = SOURCE_DIR / img["file_name"]
+        if not src_img_path.exists():
+            src_img_path = EXTRA_SOURCE_DIR / img["file_name"]
+        if not src_img_path.exists():
+            n_missing += 1
+            continue
+
+        dst_img_path = img_out_dir / img["file_name"]
+        if not dst_img_path.exists():
+            shutil.copy2(src_img_path, dst_img_path)
+
+        width, height = img["width"], img["height"]
+        lines = []
+        for ann in anns_by_image.get(image_id, []):
+            class_id = category_id_to_class_id[ann["category_id"]]
+            x, y, w, h = ann["bbox"]
+            cx = (x + w / 2) / width
+            cy = (y + h / 2) / height
+            nw = w / width
+            nh = h / height
+            lines.append(f"{class_id} {cx:.6f} {cy:.6f} {nw:.6f} {nh:.6f}")
+            n_boxes_by_class[class_id] += 1
+
+        label_path = lbl_out_dir / (Path(img["file_name"]).stem + ".txt")
+        label_path.write_text("\n".join(lines))
+        n_images += 1
+
+    print(
+        f"{date} [{split}]: {n_images} images, "
+        f"{n_boxes_by_class[0]} crop boxes, {n_boxes_by_class[1]} weed boxes, "
+        f"{n_missing} missing image files"
+    )
+
+
+def main() -> None:
+    for date in DATES:
+        for split in SPLITS:
+            convert_split(date, split)
+
+    data_yaml = OUTPUT_DIR / "data.yaml"
+    names_lines = "\n".join(f"  {i}: {name}" for i, name in enumerate(CLASS_NAMES))
+    data_yaml.write_text(
+        f"path: {OUTPUT_DIR}\n"
+        "train: images/train\n"
+        "val: images/val\n"
+        "names:\n"
+        f"{names_lines}\n"
+    )
+    print(f"\nWrote dataset config to {data_yaml}")
+
+
+if __name__ == "__main__":
+    main()

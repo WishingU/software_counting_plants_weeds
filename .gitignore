@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Dataset files - kept out of git because they're large binaries.
+# Source COCO annotations live locally in ~/Downloads/training_data/.
+# Run scripts/coco_to_yolo.py to regenerate data/yolo/ from scratch.
+data/raw_images/*
+!data/raw_images/sample.png
+data/yolo/images/
+data/yolo/labels/
+data/yolo/preview/
+*.pt
+*.pth

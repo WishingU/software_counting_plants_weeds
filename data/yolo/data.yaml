@@ -1,0 +1,6 @@
+path: /Users/vennilamoorooven/software_counting_plants_weeds/data/yolo
+train: images/train
+val: images/val
+names:
+  0: crop
+  1: weed
