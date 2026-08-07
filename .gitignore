@@ -214,7 +214,11 @@ tempCodeRunnerFile.py
 data/
 outputs/
 archives/
+Ultralytics/
 configs/ultralytics/
+configs/grass.yaml
+legacy/
+docs/project_details.docx
 models/*.pt
 *.pt
 *.onnx
@@ -230,3 +234,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 AGENTS.md
+
+docs/
+legacy/
