@@ -224,5 +224,6 @@ data/raw_images/*
 !data/raw_images/sample.png
 data/yolo/images/
 data/yolo/labels/
+data/yolo/preview/
 *.pt
 *.pth
