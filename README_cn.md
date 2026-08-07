@@ -1,6 +1,6 @@
 # Plant and Weed Detection and Counting
 
-[English README](README.en.md) | [中文运行指南](docs/RUNNING_GUIDE.zh-CN.md) |
+[English README](README.en.md) ||
 [English annotation guide](docs/ANNOTATION_GUIDE.en.md)
 
 本仓库提供一条可复现的四类苗期植株检测与计数流程：

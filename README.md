@@ -1,6 +1,6 @@
 # Plant and Weed Detection and Counting
 
-[中文 README](README.md) | [English annotation guide](docs/ANNOTATION_GUIDE.en.md)
+[中文 README](README_cn.md) | [English annotation guide](docs/ANNOTATION_GUIDE.en.md)
 
 This repository provides a reproducible pipeline for whole-plant detection and
 counting of four seedling classes:
