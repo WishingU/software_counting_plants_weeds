@@ -227,3 +227,6 @@ data/yolo/labels/
 data/yolo/preview/
 *.pt
 *.pth
+runs/*
+!runs/colab_50epoch/
+!runs/colab_50epoch/best.pt
