@@ -61,11 +61,12 @@ def main() -> None:
             "file": image_path.name,
             "crop_true": truth["crop"], "crop_pred": pred["crop"],
             "weed_true": truth["weed"], "weed_pred": pred["weed"],
+            "total_true": truth["crop"] + truth["weed"], "total_pred": pred["crop"] + pred["weed"],
         })
 
     print(f"Evaluated {len(rows)} validation images\n")
 
-    for cls in ["crop", "weed"]:
+    for cls in ["total", "crop", "weed"]:
         errors = [r[f"{cls}_pred"] - r[f"{cls}_true"] for r in rows]
         abs_errors = [abs(e) for e in errors]
         exact = sum(1 for e in errors if e == 0)
