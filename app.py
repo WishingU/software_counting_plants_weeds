@@ -14,7 +14,7 @@ from ultralytics import YOLO
 
 WEIGHTS_PATH = "runs/colab_50epoch/best.pt"
 CLASS_NAMES = ["crop", "weed"]
-CONFIDENCE = 0.35
+CONFIDENCE = 0.25
 IOU = 0.3
 
 

@@ -14,9 +14,14 @@ all 301 validation images to meaningfully reduce duplicate-box overcounting
 on long, thin, curving grass blades without losing genuinely separate nearby
 plants. See scripts/evaluate_counts.py for how this was measured.
 
-Default conf=0.35 was chosen by sweeping thresholds against all 301
-validation images and picking the best precision/recall balance (F1).
-See scripts/evaluate_plant_detection.py for how this was measured.
+Default conf=0.25: an earlier pass raised this to 0.35 to improve measured
+precision, but a systematic audit (scripts/audit_false_positives.py and
+scripts/audit_threshold_gap.py) found that ~100% of a 70-sample check of
+"false positives" - including ones only caught by the 0.25 threshold - were
+actually real, correctly-detected plants missing from the dataset's
+ground-truth labels. Raising the threshold was filtering out genuine
+detections, not noise, and made real counting accuracy worse. Reverted to
+0.25 for that reason.
 """
 
 import argparse
@@ -27,7 +32,7 @@ DEFAULT_WEIGHTS = "runs/colab_50epoch/best.pt"
 CLASS_NAMES = ["crop", "weed"]
 
 
-def count_plants(image_path: str, weights_path: str, confidence: float = 0.35, iou: float = 0.3):
+def count_plants(image_path: str, weights_path: str, confidence: float = 0.25, iou: float = 0.3):
     model = YOLO(weights_path)
     results = model.predict(source=image_path, conf=confidence, iou=iou, verbose=False)
     result = results[0]
@@ -44,7 +49,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("image", help="Path to the image to count plants in")
     parser.add_argument("--weights", default=DEFAULT_WEIGHTS, help="Path to trained model weights")
-    parser.add_argument("--conf", type=float, default=0.35, help="Confidence threshold (0-1)")
+    parser.add_argument("--conf", type=float, default=0.25, help="Confidence threshold (0-1)")
     parser.add_argument("--iou", type=float, default=0.3, help="NMS IoU threshold - lower merges nearby boxes more aggressively")
     parser.add_argument("--save", help="Optional path to save the annotated image")
     args = parser.parse_args()
