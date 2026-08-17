@@ -225,5 +225,11 @@ data/raw_images/*
 data/yolo/images/
 data/yolo/labels/
 data/yolo/preview/
+data/yolo/diagnose_fp/
+data/yolo/fp_audit/
+data/yolo/threshold_gap_audit/
 *.pt
 *.pth
+runs/*
+!runs/colab_50epoch/
+!runs/colab_50epoch/best.pt
