@@ -1,0 +1,8 @@
+path: /Users/vennilamoorooven/software_counting_plants_weeds/data/yolo_species
+train: images/train
+val: images/val
+names:
+  0: wheat
+  1: wild oat
+  2: brome grass
+  3: barley grass
