@@ -1,8 +1,0 @@
-# Minimal dependencies required for the Streamlit deployment
-streamlit
-ultralytics
-torch
-torchvision
-opencv-python-headless
-numpy
-Pillow
