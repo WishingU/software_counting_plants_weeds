@@ -44,7 +44,7 @@ if uploaded_file is not None:
     annotated_bgr = result.plot()
     annotated_rgb = cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB)
 
-    st.image(annotated_rgb, caption="Detected plants", use_container_width=True)
+    st.image(annotated_rgb, caption="Detected plants", width="stretch")
 
     st.subheader("Counts")
     st.write(f"**Crop:** {counts['crop']}")
