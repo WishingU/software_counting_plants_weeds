@@ -1,3 +1,4 @@
+# Minimal dependencies required for the Streamlit deployment
 streamlit
 ultralytics
 torch
