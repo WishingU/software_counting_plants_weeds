@@ -233,3 +233,5 @@ data/yolo/threshold_gap_audit/
 runs/*
 !runs/colab_50epoch/
 !runs/colab_50epoch/best.pt
+runs/*
+data/*

@@ -26,8 +26,8 @@ from pathlib import Path
 
 from ultralytics import YOLO
 
-IMAGES_DIR = Path("data/yolo/images/val")
-LABELS_DIR = Path("data/yolo/labels/val")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_ROOT = PROJECT_ROOT / "data" / "yolo"
 CLASS_NAMES = ["crop", "weed"]
 REAL_DETECTION_RATE = 0.957  # from 70/70 audit samples, rule-of-three lower bound
 
@@ -54,25 +54,31 @@ def predicted_counts(result) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", required=True)
+    parser.add_argument("--split", choices=("train", "val", "test"), default="test")
     parser.add_argument("--conf", type=float, default=0.25)
     parser.add_argument("--iou", type=float, default=0.3)
+    parser.add_argument("--device", default="0")
     args = parser.parse_args()
 
     model = YOLO(args.weights)
-    image_paths = sorted(IMAGES_DIR.glob("*.jpg"))
+    images_dir = DATA_ROOT / "images" / args.split
+    labels_dir = DATA_ROOT / "labels" / args.split
+    image_paths = sorted(images_dir.glob("*.jpg"))
+    if not image_paths:
+        raise SystemExit(f"No images found in {images_dir}")
 
     rows = []
     for image_path in image_paths:
-        label_path = LABELS_DIR / (image_path.stem + ".txt")
+        label_path = labels_dir / (image_path.stem + ".txt")
         truth = ground_truth_counts(label_path)
-        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, verbose=False)[0]
+        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, device=args.device, verbose=False)[0]
         pred = predicted_counts(result)
         rows.append({
             "total_true": truth["crop"] + truth["weed"],
             "total_pred": pred["crop"] + pred["weed"],
         })
 
-    print(f"Evaluated {len(rows)} validation images\n")
+    print(f"Evaluated {len(rows)} {args.split} images\n")
     print(f"Applying correction: {REAL_DETECTION_RATE*100:.1f}% of overcounting excess treated as real, unlabeled plants\n")
 
     raw_errors, corrected_errors = [], []

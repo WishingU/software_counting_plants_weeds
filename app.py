@@ -9,18 +9,21 @@ Community Cloud for a permanent public link.
 import cv2
 import numpy as np
 import streamlit as st
+from pathlib import Path
 from PIL import Image
 from ultralytics import YOLO
 
-WEIGHTS_PATH = "runs/colab_50epoch/best.pt"
-CLASS_NAMES = ["crop", "weed"]
+PROJECT_ROOT = Path(__file__).resolve().parent
+WEIGHTS_PATH = PROJECT_ROOT / "runs" / "colab_50epoch" / "best.pt"
 CONFIDENCE = 0.25
 IOU = 0.3
 
 
 @st.cache_resource
 def load_model():
-    return YOLO(WEIGHTS_PATH)
+    if not WEIGHTS_PATH.is_file():
+        raise FileNotFoundError(f"Model weights not found: {WEIGHTS_PATH}")
+    return YOLO(str(WEIGHTS_PATH))
 
 
 st.title("Crop & Weed Counter")
@@ -36,10 +39,11 @@ if uploaded_file is not None:
     results = model.predict(source=image_np, conf=CONFIDENCE, iou=IOU, verbose=False)
     result = results[0]
 
-    counts = {name: 0 for name in CLASS_NAMES}
+    names = {int(index): str(name) for index, name in model.names.items()}
+    counts = {name: 0 for name in names.values()}
     for box in result.boxes:
         class_id = int(box.cls.item())
-        counts[CLASS_NAMES[class_id]] += 1
+        counts[names[class_id]] += 1
 
     annotated_bgr = result.plot()
     annotated_rgb = cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB)
@@ -47,6 +51,6 @@ if uploaded_file is not None:
     st.image(annotated_rgb, caption="Detected plants", use_container_width=True)
 
     st.subheader("Counts")
-    st.write(f"**Crop:** {counts['crop']}")
-    st.write(f"**Weed:** {counts['weed']}")
-    st.write(f"**Total:** {counts['crop'] + counts['weed']}")
+    for name, count in counts.items():
+        st.write(f"**{name.title()}:** {count}")
+    st.write(f"**Total:** {sum(counts.values())}")

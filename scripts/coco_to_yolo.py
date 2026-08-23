@@ -13,13 +13,12 @@ tracked in git except for the small data.yaml config.
 """
 
 import json
+import argparse
 import shutil
 from pathlib import Path
 
-SOURCE_DIR = Path.home() / "Downloads" / "training_data" / "train"
-# A second folder holding extra images for the 20230526 date that aren't in SOURCE_DIR.
-EXTRA_SOURCE_DIR = Path.home() / "Downloads" / "training_data" / "train 2"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "yolo"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data" / "yolo"
 
 DATES = ["20230523", "20230526", "20230530", "20230602", "20230720"]
 SPLITS = ["train", "val"]
@@ -34,8 +33,14 @@ CATEGORY_NAME_TO_CLASS_ID = {
 }
 
 
-def convert_split(date: str, split: str) -> None:
-    json_path = SOURCE_DIR / f"{date}_combined_{split}.json"
+def convert_split(
+    date: str,
+    split: str,
+    source_dir: Path,
+    extra_source_dir: Path | None,
+    output_dir: Path,
+) -> None:
+    json_path = source_dir / f"{date}_combined_{split}.json"
     coco = json.loads(json_path.read_text())
 
     category_id_to_class_id = {
@@ -47,17 +52,17 @@ def convert_split(date: str, split: str) -> None:
     for ann in coco["annotations"]:
         anns_by_image.setdefault(ann["image_id"], []).append(ann)
 
-    img_out_dir = OUTPUT_DIR / "images" / split
-    lbl_out_dir = OUTPUT_DIR / "labels" / split
+    img_out_dir = output_dir / "images" / split
+    lbl_out_dir = output_dir / "labels" / split
     img_out_dir.mkdir(parents=True, exist_ok=True)
     lbl_out_dir.mkdir(parents=True, exist_ok=True)
 
     n_images, n_missing = 0, 0
     n_boxes_by_class = {0: 0, 1: 0}
     for image_id, img in images_by_id.items():
-        src_img_path = SOURCE_DIR / img["file_name"]
-        if not src_img_path.exists():
-            src_img_path = EXTRA_SOURCE_DIR / img["file_name"]
+        src_img_path = source_dir / img["file_name"]
+        if not src_img_path.exists() and extra_source_dir is not None:
+            src_img_path = extra_source_dir / img["file_name"]
         if not src_img_path.exists():
             n_missing += 1
             continue
@@ -90,14 +95,22 @@ def convert_split(date: str, split: str) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-dir", type=Path, required=True)
+    parser.add_argument("--extra-source-dir", type=Path)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    args = parser.parse_args()
+    source_dir = args.source_dir.resolve()
+    extra_source_dir = args.extra_source_dir.resolve() if args.extra_source_dir else None
+    output_dir = args.output_dir.resolve()
     for date in DATES:
         for split in SPLITS:
-            convert_split(date, split)
+            convert_split(date, split, source_dir, extra_source_dir, output_dir)
 
-    data_yaml = OUTPUT_DIR / "data.yaml"
+    data_yaml = output_dir / "data.yaml"
     names_lines = "\n".join(f"  {i}: {name}" for i, name in enumerate(CLASS_NAMES))
     data_yaml.write_text(
-        f"path: {OUTPUT_DIR}\n"
+        f"path: {output_dir.as_posix()}\n"
         "train: images/train\n"
         "val: images/val\n"
         "names:\n"

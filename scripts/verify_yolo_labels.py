@@ -55,7 +55,7 @@ def main() -> None:
         out_path = PREVIEW_DIR / image_path.name
         draw_boxes(image_path, label_path, out_path)
 
-    print(f"\nOpen {PREVIEW_DIR} in Finder/VS Code to check the boxes look right.")
+    print(f"\nOpen {PREVIEW_DIR} in File Explorer or VS Code to inspect the boxes.")
 
 
 if __name__ == "__main__":
