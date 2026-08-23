@@ -244,11 +244,17 @@ data/yolo/preview/
 data/yolo/diagnose_fp/
 data/yolo/fp_audit/
 data/yolo/threshold_gap_audit/
+data/yolo_species/images/
+data/yolo_species/labels/
 *.pt
 *.pth
 runs/*
 !runs/colab_50epoch/
 !runs/colab_50epoch/best.pt
+!runs/colab_species_50epoch/
+!runs/colab_species_50epoch/best.pt
+!runs/colab_species_100epoch/
+!runs/colab_species_100epoch/best.pt
 runs/*
 data/*
 
