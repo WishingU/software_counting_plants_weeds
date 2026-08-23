@@ -11,8 +11,10 @@ import numpy as np
 import streamlit as st
 from PIL import Image
 from ultralytics import YOLO
+from pathlib import Path 
 
-WEIGHTS_PATH = "runs/colab_50epoch/best.pt"
+BASE_DIR = Path(__file__).resolve().parent
+WEIGHTS_PATH = BASE_DIR / "runs" / "colab_50epoch" / "best.pt"
 CLASS_NAMES = ["crop", "weed"]
 CONFIDENCE = 0.25
 IOU = 0.3
