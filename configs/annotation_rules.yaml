@@ -1,0 +1,70 @@
+schema_version: 1
+task: four-class whole-plant object detection and counting
+annotation_type: bounding_box
+unit: one physical plant
+
+geometry:
+  include_all_visible_plant_pixels: true
+  padding_pixels: 2
+  minimum_visible_fraction: 0.20
+  minimum_box_width_pixels: 8
+  minimum_box_height_pixels: 8
+  maximum_box_area_ratio: 0.30
+  duplicate_iou_threshold: 0.95
+
+classes:
+  wheat:
+    coco_id: 1
+    yolo_id: 0
+    scientific_scope: Triticum spp. used in this experiment
+    identity_priority: plot or sowing provenance, then morphology
+    cues:
+      - leaf blade usually twists clockwise
+      - blunt hairy auricles may be visible after sufficient development
+    reject_when:
+      - identity is inferred only from green colour or plant size
+      - provenance conflicts with morphology and has not been reviewed
+
+  wild oat:
+    coco_id: 2
+    yolo_id: 1
+    scientific_scope: Avena spp. represented in this experiment
+    identity_priority: plot or seed provenance, then morphology
+    cues:
+      - seedling leaves commonly twist anticlockwise
+      - large ligule and no auricles
+      - leaves may be slightly hairy with a bluish hue
+    reject_when:
+      - separated from brome grass using leaf colour alone
+      - the key collar or seed traits are invisible and provenance is unavailable
+
+  brome grass:
+    coco_id: 3
+    yolo_id: 2
+    scientific_scope: Bromus spp. represented in this experiment
+    identity_priority: plot or seed provenance, then morphology
+    cues:
+      - dull hairy leaves, sometimes with reddish-purple vein stripes
+      - large ligule and no auricles
+      - leaf or sheath hairs are usually visible at adequate resolution
+    reject_when:
+      - separated from wild oat without provenance or a visible diagnostic trait
+      - assigned solely because the plant is broad or sprawling
+
+  barley grass:
+    coco_id: 4
+    yolo_id: 3
+    scientific_scope: Hordeum spp. represented in this experiment
+    identity_priority: plot or seed provenance, then morphology
+    cues:
+      - narrow leaves taper to a point and may carry soft hairs
+      - prominent auricles and a membranous ligule in relevant Hordeum species
+      - attached seed remnants can be diagnostic when visible
+    reject_when:
+      - confused with cereal barley or another grass without provenance review
+      - assigned solely from pale green colour
+
+review_states:
+  accepted: class and instance boundary meet all rules
+  needs_review: plant is valid but species is not reliably determined
+  ignored: less than minimum visible fraction or not one of the four target classes
