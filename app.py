@@ -22,6 +22,10 @@ IOU = 0.3
 
 @st.cache_resource
 def load_model():
+    if not WEIGHTS_PATH.exists():
+        st.error(f"Model weights not found: {WEIGHTS_PATH}")
+        st.stop()
+
     return YOLO(WEIGHTS_PATH)
 
 
