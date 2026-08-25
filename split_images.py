@@ -2,8 +2,8 @@ import cv2
 import os
 from pathlib import Path
 
-INPUT_DIR = Path.home() / "Desktop" / "10_08_v_grass"
-OUTPUT_DIR = Path.home() / "Desktop" / "10_08_v_grass_split"
+INPUT_DIR = Path.home() / "Downloads" / "Ami data" / "converted"
+OUTPUT_DIR = Path.home() / "Downloads" / "Ami_data_split"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
