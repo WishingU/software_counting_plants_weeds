@@ -44,6 +44,7 @@ def main() -> None:
     parser.add_argument("--weights", required=True)
     parser.add_argument("--conf", type=float, default=0.25)
     parser.add_argument("--iou", type=float, default=0.3, help="NMS IoU threshold - lower merges nearby boxes more aggressively")
+    parser.add_argument("--augment", action="store_true", help="Enable test-time augmentation (slower, no retraining needed)")
     args = parser.parse_args()
 
     model = YOLO(args.weights)
@@ -54,7 +55,7 @@ def main() -> None:
         label_path = LABELS_DIR / (image_path.stem + ".txt")
         truth = ground_truth_counts(label_path)
 
-        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, verbose=False)[0]
+        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, augment=args.augment, verbose=False)[0]
         pred = predicted_counts(result)
 
         rows.append({
