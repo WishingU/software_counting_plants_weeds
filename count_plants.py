@@ -22,13 +22,21 @@ actually real, correctly-detected plants missing from the dataset's
 ground-truth labels. Raising the threshold was filtering out genuine
 detections, not noise, and made real counting accuracy worse. Reverted to
 0.25 for that reason.
+
+Default weights are the 100-epoch YOLOv8n model (runs/colab_100epoch). Two
+other options were tried and rejected: more training (100 vs 50 epochs) gave
+a modest real improvement, so it replaced the 50-epoch model as default.
+A bigger model (YOLOv8s, runs/colab_yolov8s) had better box-detection
+metrics (precision/recall/mAP) but WORSE actual counting accuracy - it
+overcounts more, which cancels out the detection-quality gain. See
+scripts/evaluate_counts.py results for each before changing this default.
 """
 
 import argparse
 
 from ultralytics import YOLO
 
-DEFAULT_WEIGHTS = "runs/colab_50epoch/best.pt"
+DEFAULT_WEIGHTS = "runs/colab_100epoch/best.pt"
 CLASS_NAMES = ["crop", "weed"]
 
 

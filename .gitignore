@@ -241,3 +241,5 @@ runs/*
 !runs/colab_species_100epoch/best.pt
 !runs/colab_100epoch/
 !runs/colab_100epoch/best.pt
+!runs/colab_yolov8s/
+!runs/colab_yolov8s/best.pt

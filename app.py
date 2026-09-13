@@ -12,7 +12,7 @@ import streamlit as st
 from PIL import Image
 from ultralytics import YOLO
 
-WEIGHTS_PATH = "runs/colab_50epoch/best.pt"
+WEIGHTS_PATH = "runs/colab_100epoch/best.pt"
 CLASS_NAMES = ["crop", "weed"]
 CONFIDENCE = 0.25
 IOU = 0.3
