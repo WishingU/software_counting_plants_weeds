@@ -18,9 +18,10 @@ import cv2
 from PIL import Image
 from ultralytics import YOLO
 
-IMAGES_DIR = Path("data/yolo/images/val")
-LABELS_DIR = Path("data/yolo/labels/val")
-OUT_DIR = Path("data/yolo/diagnose_fp")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+IMAGES_DIR = PROJECT_ROOT / "data" / "yolo" / "images" / "val"
+LABELS_DIR = PROJECT_ROOT / "data" / "yolo" / "labels" / "val"
+OUT_DIR = PROJECT_ROOT / "outputs" / "diagnose_fp"
 IOU_MATCH_THRESHOLD = 0.5
 N_WORST = 5
 
@@ -54,6 +55,7 @@ def main() -> None:
     parser.add_argument("--weights", required=True)
     parser.add_argument("--conf", type=float, default=0.35)
     parser.add_argument("--iou", type=float, default=0.3)
+    parser.add_argument("--device", default="0")
     args = parser.parse_args()
 
     model = YOLO(args.weights)
@@ -65,7 +67,7 @@ def main() -> None:
         width, height = Image.open(image_path).size
         gt_boxes = ground_truth_boxes(label_path, width, height)
 
-        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, verbose=False)[0]
+        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, device=args.device, verbose=False)[0]
         pred_boxes = [tuple(box.xyxy[0].tolist()) for box in result.boxes]
 
         matched_gt = set()

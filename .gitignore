@@ -200,6 +200,7 @@ cython_debug/
 #   and can be added to the global gitignore or merged into this file. However, if you prefer, 
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
+.vscode/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
@@ -208,6 +209,21 @@ tempCodeRunnerFile.py
 
 # PyPI configuration file
 .pypirc
+
+# Project data and generated model artifacts
+data/
+outputs/
+archives/
+Ultralytics/
+configs/ultralytics/
+configs/grass.yaml
+legacy/
+docs/project_details.docx
+models/*.pt
+*.pt
+*.onnx
+*.engine
+build_report.json
 
 # Marimo
 marimo/_static/
@@ -228,8 +244,21 @@ data/yolo/preview/
 data/yolo/diagnose_fp/
 data/yolo/fp_audit/
 data/yolo/threshold_gap_audit/
+data/yolo_species/images/
+data/yolo_species/labels/
 *.pt
 *.pth
 runs/*
 !runs/colab_50epoch/
 !runs/colab_50epoch/best.pt
+!runs/colab_species_50epoch/
+!runs/colab_species_50epoch/best.pt
+!runs/colab_species_100epoch/
+!runs/colab_species_100epoch/best.pt
+runs/*
+data/*
+
+AGENTS.md
+
+docs/
+legacy/

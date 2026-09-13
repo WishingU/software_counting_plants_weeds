@@ -19,9 +19,10 @@ import cv2
 from PIL import Image, ImageDraw
 from ultralytics import YOLO
 
-IMAGES_DIR = Path("data/yolo/images/val")
-LABELS_DIR = Path("data/yolo/labels/val")
-OUT_DIR = Path("data/yolo/threshold_gap_audit")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+IMAGES_DIR = PROJECT_ROOT / "data" / "yolo" / "images" / "val"
+LABELS_DIR = PROJECT_ROOT / "data" / "yolo" / "labels" / "val"
+OUT_DIR = PROJECT_ROOT / "outputs" / "threshold_gap_audit"
 IOU_MATCH_THRESHOLD = 0.5
 CELL_SIZE = 340
 GRID_COLS = 5
@@ -61,6 +62,7 @@ def main() -> None:
     parser.add_argument("--iou", type=float, default=0.3)
     parser.add_argument("--n", type=int, default=30)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--device", default="0")
     args = parser.parse_args()
 
     model = YOLO(args.weights)
@@ -73,7 +75,7 @@ def main() -> None:
         width, height = Image.open(image_path).size
         gt_boxes = ground_truth_boxes(label_path, width, height)
 
-        result = model.predict(source=str(image_path), conf=args.low, iou=args.iou, verbose=False)[0]
+        result = model.predict(source=str(image_path), conf=args.low, iou=args.iou, device=args.device, verbose=False)[0]
         preds = [(tuple(box.xyxy[0].tolist()), box.conf.item()) for box in result.boxes]
         preds.sort(key=lambda p: -p[1])
 

@@ -25,36 +25,54 @@ detections, not noise, and made real counting accuracy worse. Reverted to
 """
 
 import argparse
+from pathlib import Path
 
 from ultralytics import YOLO
 
-DEFAULT_WEIGHTS = "runs/colab_50epoch/best.pt"
-CLASS_NAMES = ["crop", "weed"]
+PROJECT_ROOT = Path(__file__).resolve().parent
+DEFAULT_WEIGHTS = PROJECT_ROOT / "runs" / "colab_50epoch" / "best.pt"
 
 
-def count_plants(image_path: str, weights_path: str, confidence: float = 0.25, iou: float = 0.3):
-    model = YOLO(weights_path)
-    results = model.predict(source=image_path, conf=confidence, iou=iou, verbose=False)
+def count_plants(
+    image_path: Path,
+    weights_path: Path,
+    confidence: float = 0.25,
+    iou: float = 0.3,
+    device: str | None = None,
+):
+    if not image_path.is_file():
+        raise FileNotFoundError(f"Image does not exist: {image_path}")
+    if not weights_path.is_file():
+        raise FileNotFoundError(f"Model weights do not exist: {weights_path}")
+    model = YOLO(str(weights_path))
+    results = model.predict(
+        source=str(image_path), conf=confidence, iou=iou, device=device, verbose=False
+    )
     result = results[0]
 
-    counts = {name: 0 for name in CLASS_NAMES}
+    names = {int(index): str(name) for index, name in model.names.items()}
+    counts = {name: 0 for name in names.values()}
     for box in result.boxes:
         class_id = int(box.cls.item())
-        counts[CLASS_NAMES[class_id]] += 1
+        counts[names[class_id]] += 1
 
     return counts, result
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("image", help="Path to the image to count plants in")
-    parser.add_argument("--weights", default=DEFAULT_WEIGHTS, help="Path to trained model weights")
+    parser.add_argument("image", type=Path, help="Path to the image to count plants in")
+    parser.add_argument("--weights", type=Path, default=DEFAULT_WEIGHTS, help="Path to trained model weights")
     parser.add_argument("--conf", type=float, default=0.25, help="Confidence threshold (0-1)")
     parser.add_argument("--iou", type=float, default=0.3, help="NMS IoU threshold - lower merges nearby boxes more aggressively")
-    parser.add_argument("--save", help="Optional path to save the annotated image")
+    parser.add_argument("--device", help="CUDA device such as 0, or cpu (default: auto)")
+    parser.add_argument("--save", type=Path, help="Optional path to save the annotated image")
     args = parser.parse_args()
 
-    counts, result = count_plants(args.image, args.weights, args.conf, args.iou)
+    try:
+        counts, result = count_plants(args.image.resolve(), args.weights.resolve(), args.conf, args.iou, args.device)
+    except (FileNotFoundError, ValueError) as exc:
+        parser.error(str(exc))
 
     total = sum(counts.values())
     print(f"\n{args.image}")
@@ -63,7 +81,8 @@ def main() -> None:
     print(f"  total: {total}")
 
     if args.save:
-        result.save(filename=args.save)
+        args.save.parent.mkdir(parents=True, exist_ok=True)
+        result.save(filename=str(args.save))
         print(f"\nAnnotated image saved to {args.save}")
 
 

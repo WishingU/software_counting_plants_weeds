@@ -16,8 +16,8 @@ from pathlib import Path
 from PIL import Image
 from ultralytics import YOLO
 
-IMAGES_DIR = Path("data/yolo/images/val")
-LABELS_DIR = Path("data/yolo/labels/val")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_ROOT = PROJECT_ROOT / "data" / "yolo"
 IOU_MATCH_THRESHOLD = 0.5
 
 
@@ -68,24 +68,30 @@ def match(pred_boxes, gt_boxes):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", required=True)
+    parser.add_argument("--split", choices=("train", "val", "test"), default="test")
     parser.add_argument("--conf", type=str, default="0.25", help="Comma-separated list of confidence thresholds to test, e.g. 0.25,0.35,0.45")
     parser.add_argument("--iou", type=float, default=0.3, help="NMS IoU threshold for the model's own predictions")
+    parser.add_argument("--device", default="0")
     args = parser.parse_args()
 
     conf_values = sorted(float(c) for c in args.conf.split(","))
     conf_floor = conf_values[0]
 
     model = YOLO(args.weights)
-    image_paths = sorted(IMAGES_DIR.glob("*.jpg"))
+    images_dir = DATA_ROOT / "images" / args.split
+    labels_dir = DATA_ROOT / "labels" / args.split
+    image_paths = sorted(images_dir.glob("*.jpg"))
+    if not image_paths:
+        raise SystemExit(f"No images found in {images_dir}")
 
     totals = {c: {"tp": 0, "fp": 0, "fn": 0} for c in conf_values}
 
     for image_path in image_paths:
-        label_path = LABELS_DIR / (image_path.stem + ".txt")
+        label_path = labels_dir / (image_path.stem + ".txt")
         width, height = Image.open(image_path).size
         gt_boxes = ground_truth_boxes(label_path, width, height)
 
-        result = model.predict(source=str(image_path), conf=conf_floor, iou=args.iou, verbose=False)[0]
+        result = model.predict(source=str(image_path), conf=conf_floor, iou=args.iou, device=args.device, verbose=False)[0]
         # (box, confidence) pairs, sorted by confidence descending
         all_preds = sorted(
             ((tuple(box.xyxy[0].tolist()), box.conf.item()) for box in result.boxes),
@@ -99,7 +105,7 @@ def main() -> None:
             totals[c]["fp"] += fp
             totals[c]["fn"] += fn
 
-    print(f"Evaluated {len(image_paths)} validation images (any plant, class-agnostic, IoU>={IOU_MATCH_THRESHOLD})\n")
+    print(f"Evaluated {len(image_paths)} {args.split} images (any plant, class-agnostic, IoU>={IOU_MATCH_THRESHOLD})\n")
     print(f"{'conf':>6}  {'TP':>5}  {'FP':>5}  {'FN':>5}  {'precision':>9}  {'recall':>7}")
     for c in conf_values:
         tp, fp, fn = totals[c]["tp"], totals[c]["fp"], totals[c]["fn"]

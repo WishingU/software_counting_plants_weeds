@@ -1,0 +1,9 @@
+path: ../data/processed
+train: images/train
+val: images/val
+
+names:
+  0: 'wheat'
+  1: 'wild oat'
+  2: 'brome grass'
+  3: 'barley grass'
