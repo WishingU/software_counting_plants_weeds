@@ -1,8 +1,22 @@
-# Models
+# Curated models
 
-`yolo26n.pt` is the pretrained starting checkpoint used by the training
-examples. Model binaries are intentionally ignored by Git.
+This directory contains checkpoints intentionally distributed with the project.
+Generated training runs belong under runs/ or outputs/ and are ignored by Git.
 
-Trained checkpoints are written under `outputs/runs/detect/<run>/weights/`.
-The existing baseline checkpoint is located at
-`outputs/runs/detect/baseline_v1/weights/best.pt`.
+## Counting models
+
+| File | Purpose |
+| --- | --- |
+| counting/yolov8n-50e.pt | Default crop/weed counter |
+| counting/yolov8n-100e.pt | Longer-trained crop/weed counter |
+| counting/yolov8s-comparison.pt | Larger comparison model |
+
+## Species models
+
+| File | Purpose |
+| --- | --- |
+| species/yolov8n-50e.pt | Four-species baseline |
+| species/yolov8n-100e.pt | Preferred four-species checkpoint |
+
+When adding a model, use a descriptive filename and update this table. Do not
+commit entire training-run directories.

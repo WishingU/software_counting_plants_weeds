@@ -2,7 +2,7 @@
 
 Usage:
     python count_plants.py path/to/image.jpg
-    python count_plants.py path/to/image.jpg --weights runs/colab_hires/best.pt
+    python count_plants.py path/to/image.jpg --weights models/counting/yolov8n-100e.pt
     python count_plants.py path/to/image.jpg --save annotated.jpg
 
 Runs entirely on CPU/MPS locally - no GPU needed for inference, only for
@@ -30,7 +30,7 @@ from pathlib import Path
 from ultralytics import YOLO
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DEFAULT_WEIGHTS = PROJECT_ROOT / "runs" / "colab_50epoch" / "best.pt"
+DEFAULT_WEIGHTS = PROJECT_ROOT / "models" / "counting" / "yolov8n-50e.pt"
 
 
 def count_plants(

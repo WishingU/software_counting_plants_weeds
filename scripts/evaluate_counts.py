@@ -7,7 +7,7 @@ like mAP, but the thing that actually matters for this project: how close
 are the predicted counts to reality.
 
 Usage:
-    python scripts/evaluate_counts.py --weights runs/colab_hires/best.pt
+    python scripts/evaluate_counts.py --weights models/counting/yolov8n-50e.pt
 """
 
 import argparse

@@ -1,6 +1,6 @@
 # Minimal dependencies required for the Streamlit deployment
 streamlit
-ultralytics
+ultralytics==8.4.110
 torch
 torchvision
 opencv-python-headless

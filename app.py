@@ -11,7 +11,7 @@ from ultralytics import YOLO
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_WEIGHTS = BASE_DIR / "runs" / "colab_50epoch" / "best.pt"
+DEFAULT_WEIGHTS = BASE_DIR / "models" / "counting" / "yolov8n-50e.pt"
 SUPPORTED_UPLOAD_TYPES = ["jpg", "jpeg", "png"]
 
 

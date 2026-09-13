@@ -8,7 +8,7 @@ color-coded so the failure pattern is visible at a glance:
   yellow = false negative (real plant the model missed)
 
 Usage:
-    python scripts/diagnose_false_positives.py --weights runs/colab_50epoch/best.pt
+    python scripts/diagnose_false_positives.py --weights models/counting/yolov8n-50e.pt
 """
 
 import argparse

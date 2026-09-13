@@ -18,7 +18,7 @@ it approximates what accuracy would look like if the labels were complete,
 based on the confirmed real-detection rate from the audits.
 
 Usage:
-    python scripts/evaluate_counts_corrected.py --weights runs/colab_50epoch/best.pt
+    python scripts/evaluate_counts_corrected.py --weights models/counting/yolov8n-50e.pt
 """
 
 import argparse

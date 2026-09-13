@@ -12,7 +12,7 @@ found several "false positives" were actually correctly-detected plants
 that simply weren't labeled).
 
 Usage:
-    python scripts/audit_false_positives.py --weights runs/colab_50epoch/best.pt --n 40
+    python scripts/audit_false_positives.py --weights models/counting/yolov8n-50e.pt --n 40
 """
 
 import argparse

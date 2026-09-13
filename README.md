@@ -1,74 +1,86 @@
-## Public Deployment
+# Plant and Weed Counter
 
-A working deployment of the crop and weed counting application has been created using Streamlit Community Cloud for testing and verification.
+This project provides reproducible tools for crop/weed counting and four-species
+plant identification with Ultralytics YOLO models. It includes a Streamlit
+interface, command-line inference, dataset utilities, evaluation scripts,
+curated checkpoints, and automated tests.
 
-### Current Test Deployment
+[中文说明](README_cn.md) · [Windows setup](README_WINDOWS.md) ·
+[Annotation guide](docs/ANNOTATION_GUIDE.en.md)
 
-[Open the Crop & Weed Counter](https://crop-weed-counter-afridi.streamlit.app/)
+## Project layout
 
-The current deployment is hosted from the `afridi-deployment` branch through a personal fork of the team repository. It is intended as a working deployment for testing and verification. The final project deployment can later be moved to the main team repository or redeployed under a neutral project-owned URL.
+~~~text
+app.py                 Streamlit application
+count_plants.py        Command-line inference
+src/plant_counter/     Maintained dataset, audit, training, and evaluation code
+scripts/               Data conversion, image preparation, and diagnostics
+tests/                 Automated unit tests
+configs/               Portable configuration examples and annotation rules
+data/                  Dataset YAML files and one sample image
+models/counting/       Curated crop/weed checkpoints
+models/species/        Curated four-species checkpoints
+runs/, outputs/        Generated local results (not committed)
+notebooks/             Exploratory image-splitting notebooks
+~~~
 
-## Deployment Setup
+## Setup
 
-The deployed application uses:
+~~~powershell
+conda activate plant-count
+python -m pip install -e ".[app,tools]" --no-build-isolation
+~~~
 
-* `app.py` as the Streamlit entry point
-* `requirements.txt` for the minimal dependencies required by the deployed application
-* `requirements-dev.txt` for the full local development environment
-* `.streamlit/config.toml` for Streamlit configuration
-* `runs/colab_50epoch/best.pt` as the trained YOLO model weights
+For Streamlit deployment only:
 
-## Running Locally
+~~~powershell
+python -m pip install -r requirements.txt
+~~~
 
-Install the required application dependencies:
+## Run the application
 
-```bash
-pip install -r requirements.txt
-```
-
-Start the application with:
-
-```bash
+~~~powershell
 python -m streamlit run app.py
-```
+~~~
 
-If Streamlit is available directly in the active environment, it can also be started with:
+The application discovers checkpoints under models/ and runs/. The default is
+models/counting/yolov8n-50e.pt.
 
-```bash
-streamlit run app.py
-```
+## Command-line inference
 
-After startup, open the local URL provided by Streamlit, usually:
+~~~powershell
+python count_plants.py data/raw_images/sample.png --device 0
+~~~
 
-```text
-http://localhost:8501
-```
+Use --weights to select another curated or locally trained checkpoint.
 
-## Using the Application
+## Train and evaluate
 
-1. Open the application.
-2. Upload a JPG, JPEG, or PNG plant image.
-3. Wait for the YOLO model to process the image.
-4. The application displays the image with detected plants annotated.
-5. The interface displays:
+Install the project first, then use the maintained package entry points:
 
-   * crop count
-   * weed count
-   * total plant count
+~~~powershell
+python -m plant_counter.train --data data/yolo/data.yaml --model yolov8n.pt --project outputs/runs/detect --name crop_weed_v1
 
-## Deployment Verification
+python -m plant_counter.evaluate --model models/counting/yolov8n-50e.pt --data data/yolo/data.yaml --split test --output-dir outputs/runs/evaluation/crop_weed
+~~~
 
-The deployed application was tested with both simpler and more crowded plant images.
+Specialized audits and comparison tools remain under scripts/.
 
-The following functionality was verified successfully:
+## Image preparation
 
-* application loads through the public Streamlit deployment
-* image upload works
-* YOLO model weights load successfully
-* model inference completes
-* annotated detections are displayed
-* crop count is displayed
-* weed count is displayed
-* total count is displayed
+~~~powershell
+python scripts/split_images.py data/source data/split --grid 3
+python scripts/split_images.py data/source data/wild_split --grid 2 --name-contains wild
+python scripts/heic_to_jpeg.py data/heic data/jpeg
+~~~
 
-Model accuracy is evaluated separately from deployment functionality. These deployment tests confirm that the application runs and returns predictions successfully, but do not imply that every predicted count is accurate.
+## Tests
+
+~~~powershell
+$env:PYTHONPATH = "$PWD\src"
+python -m unittest discover -s tests -v
+~~~
+
+The public Streamlit deployment is available for functional testing at
+[crop-weed-counter-afridi.streamlit.app](https://crop-weed-counter-afridi.streamlit.app/).
+Model accuracy should be assessed separately with the evaluation workflow.

@@ -7,7 +7,7 @@ into one "plant" category and matching predicted boxes to ground-truth
 boxes by location (IoU), not by class label.
 
 Usage:
-    python scripts/evaluate_plant_detection.py --weights runs/colab_50epoch/best.pt
+    python scripts/evaluate_plant_detection.py --weights models/counting/yolov8n-50e.pt
 """
 
 import argparse

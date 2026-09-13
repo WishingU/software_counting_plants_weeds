@@ -14,6 +14,13 @@ dependencies = [
   "ultralytics==8.4.110",
 ]
 
+[project.optional-dependencies]
+app = ["streamlit>=1.40,<2"]
+tools = [
+  "pillow-heif>=0.18,<1",
+  "pycocotools>=2.0,<3",
+]
+
 [project.scripts]
 plant-build-dataset = "plant_counter.dataset:main"
 plant-audit-annotations = "plant_counter.audit:main"

@@ -32,7 +32,7 @@ def _resolve_data(data_path: Path, split: str) -> tuple[Path, Path, list[str]]:
     except ImportError as exc:
         raise SystemExit("PyYAML is required; install the project dependencies first.") from exc
     data = yaml.safe_load(data_path.read_text(encoding="utf-8"))
-    root = Path(data["path"])
+    root = Path(data.get("path", "."))
     if not root.is_absolute():
         root = (data_path.parent / root).resolve()
     images_dir = (root / data[split]).resolve()
