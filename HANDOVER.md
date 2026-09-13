@@ -6,6 +6,8 @@ have been folded into the maintained structure.
 ## Available workflows
 
 - Crop/weed counting through app.py and count_plants.py.
+- Optional green-dominance enhancement in both inference entry points. It is
+  disabled by default so existing inference behavior remains unchanged.
 - Four-species dataset, training, and evaluation through src/plant_counter/.
 - Dataset conversion, annotation diagnostics, threshold audits, and image
   preparation under scripts/.

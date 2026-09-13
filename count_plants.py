@@ -3,6 +3,7 @@
 Usage:
     python count_plants.py path/to/image.jpg
     python count_plants.py path/to/image.jpg --weights models/counting/yolov8n-100e.pt
+    python count_plants.py path/to/image.jpg --enhance-green
     python count_plants.py path/to/image.jpg --save annotated.jpg
 
 Runs entirely on CPU/MPS locally - no GPU needed for inference, only for
@@ -27,7 +28,10 @@ detections, not noise, and made real counting accuracy worse. Reverted to
 import argparse
 from pathlib import Path
 
+from PIL import Image
 from ultralytics import YOLO
+
+from plant_counter.preprocess import enhance_green
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_WEIGHTS = PROJECT_ROOT / "models" / "counting" / "yolov8n-50e.pt"
@@ -39,14 +43,19 @@ def count_plants(
     confidence: float = 0.25,
     iou: float = 0.3,
     device: str | None = None,
+    enhance_green_input: bool = False,
 ):
     if not image_path.is_file():
         raise FileNotFoundError(f"Image does not exist: {image_path}")
     if not weights_path.is_file():
         raise FileNotFoundError(f"Model weights do not exist: {weights_path}")
+    source = str(image_path)
+    if enhance_green_input:
+        with Image.open(image_path) as image:
+            source = enhance_green(image.convert("RGB"))
     model = YOLO(str(weights_path))
     results = model.predict(
-        source=str(image_path), conf=confidence, iou=iou, device=device, verbose=False
+        source=source, conf=confidence, iou=iou, device=device, verbose=False
     )
     result = results[0]
 
@@ -66,11 +75,23 @@ def main() -> None:
     parser.add_argument("--conf", type=float, default=0.25, help="Confidence threshold (0-1)")
     parser.add_argument("--iou", type=float, default=0.3, help="NMS IoU threshold - lower merges nearby boxes more aggressively")
     parser.add_argument("--device", help="CUDA device such as 0, or cpu (default: auto)")
+    parser.add_argument(
+        "--enhance-green",
+        action="store_true",
+        help="Enhance green-dominant pixels before inference",
+    )
     parser.add_argument("--save", type=Path, help="Optional path to save the annotated image")
     args = parser.parse_args()
 
     try:
-        counts, result = count_plants(args.image.resolve(), args.weights.resolve(), args.conf, args.iou, args.device)
+        counts, result = count_plants(
+            args.image.resolve(),
+            args.weights.resolve(),
+            args.conf,
+            args.iou,
+            args.device,
+            args.enhance_green,
+        )
     except (FileNotFoundError, ValueError) as exc:
         parser.error(str(exc))
 

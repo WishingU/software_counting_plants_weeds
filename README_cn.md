@@ -44,11 +44,17 @@ python -m streamlit run app.py
 网页会自动发现 models/ 和 runs/ 中的模型，默认使用
 models/counting/yolov8n-50e.pt。
 
+推理参数侧栏中的 **Enhance green vegetation** 可以开启绿色增强。它只适度增强
+本来就偏绿的区域，预览图就是实际送入模型的图像。该功能默认关闭。
+
 ## 命令行推理
 
 ~~~powershell
 python count_plants.py data/raw_images/sample.png --device 0
+python count_plants.py data/raw_images/sample.png --device 0 --enhance-green
 ~~~
+
+命令行添加 --enhance-green 即可开启与网页相同的预处理。
 
 ## 训练与评估
 

@@ -9,6 +9,8 @@ import torch
 from PIL import Image
 from ultralytics import YOLO
 
+from plant_counter.preprocess import enhance_green
+
 
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_WEIGHTS = BASE_DIR / "models" / "counting" / "yolov8n-50e.pt"
@@ -91,6 +93,14 @@ with st.sidebar:
         value=640,
     )
     max_detections = st.number_input("Maximum detections", 1, 3000, 300, 10)
+    enhance_green_input = st.toggle(
+        "Enhance green vegetation",
+        value=False,
+        help=(
+            "Apply a mild green-dominance enhancement before inference. "
+            "Turn it off to use the original image."
+        ),
+    )
 
     device_options = {"Auto": None, "CPU": "cpu"}
     if torch.cuda.is_available():
@@ -109,9 +119,16 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
     preview = Image.open(uploaded_file).convert("RGB")
+    original_rgb = np.asarray(preview)
+    inference_rgb = enhance_green(original_rgb) if enhance_green_input else original_rgb
+    preview_caption = (
+        "Inference input (green enhancement on)"
+        if enhance_green_input
+        else "Inference input (original image)"
+    )
     _, preview_column, _ = st.columns([1, 2, 1])
     with preview_column:
-        st.image(preview, caption="Uploaded image", width="stretch")
+        st.image(inference_rgb, caption=preview_caption, width="stretch")
 
     if st.button("Run analysis", type="primary", use_container_width=True):
         if not weights_path.is_file():
@@ -122,7 +139,7 @@ if uploaded_file is not None:
             with st.spinner(f"Loading {display_path(weights_path)} and running inference..."):
                 model = load_model(str(weights_path), weights_path.stat().st_mtime_ns)
                 predict_args = {
-                    "source": np.asarray(preview),
+                    "source": inference_rgb,
                     "conf": confidence,
                     "iou": iou,
                     "imgsz": image_size,
@@ -159,3 +176,7 @@ if uploaded_file is not None:
             st.write(f"Task: `{model.task}`")
             st.write(f"Classes: `{', '.join(names.values())}`")
             st.write(f"Device: `{selected_device}`")
+            st.write(
+                "Green enhancement: "
+                f"`{'On' if enhance_green_input else 'Off'}`"
+            )

@@ -12,16 +12,20 @@ python -m pip install -e ".[app,tools]" --no-build-isolation
 
 ~~~powershell
 python count_plants.py data\raw_images\sample.png --device 0
+python count_plants.py data\raw_images\sample.png --device 0 --enhance-green
 ~~~
 
 The default checkpoint is models\counting\yolov8n-50e.pt. Select another
-model with --weights.
+model with --weights. Add --enhance-green to enable optional green enhancement.
 
 ## Web application
 
 ~~~powershell
 python -m streamlit run app.py
 ~~~
+
+Use the **Enhance green vegetation** switch in the inference sidebar to turn
+green enhancement on or off. It is off by default.
 
 ## Training
 

@@ -46,13 +46,19 @@ python -m streamlit run app.py
 The application discovers checkpoints under models/ and runs/. The default is
 models/counting/yolov8n-50e.pt.
 
+Enable **Enhance green vegetation** in the inference sidebar to mildly boost
+pixels that are already green-dominant. The preview shows the exact image sent
+to the model. The option is off by default.
+
 ## Command-line inference
 
 ~~~powershell
 python count_plants.py data/raw_images/sample.png --device 0
+python count_plants.py data/raw_images/sample.png --device 0 --enhance-green
 ~~~
 
-Use --weights to select another curated or locally trained checkpoint.
+Use --weights to select another checkpoint. Use --enhance-green to enable the
+same optional preprocessing available in the web application.
 
 ## Train and evaluate
 
