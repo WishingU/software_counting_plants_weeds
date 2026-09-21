@@ -60,9 +60,51 @@ configs/grass.yaml
 *.pth
 *.onnx
 *.engine
-!models/**/*.pt
+build_report.json
 
-# Local-only project material
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Dataset files - kept out of git because they're large binaries.
+# Source COCO annotations live locally in ~/Downloads/training_data/.
+# Run scripts/coco_to_yolo.py to regenerate data/yolo/ from scratch.
+data/raw_images/*
+!data/raw_images/sample.png
+data/yolo/images/
+data/yolo/labels/
+data/yolo/preview/
+data/yolo/diagnose_fp/
+data/yolo/fp_audit/
+data/yolo/threshold_gap_audit/
+data/yolo_species/images/
+data/yolo_species/labels/
+data/yolo_species/images/
+data/yolo_species/labels/
+*.pt
+*.pth
+runs/*
+!runs/colab_50epoch/
+!runs/colab_50epoch/best.pt
+!runs/colab_species_50epoch/
+!runs/colab_species_50epoch/best.pt
+!runs/colab_species_100epoch/
+!runs/colab_species_100epoch/best.pt
+!runs/colab_100epoch/
+!runs/colab_100epoch/best.pt
+!runs/colab_yolov8s/
+!runs/colab_yolov8s/best.pt
+
+!runs/colab_species_50epoch/
+!runs/colab_species_50epoch/best.pt
+!runs/colab_species_100epoch/
+!runs/colab_species_100epoch/best.pt
+runs/*
+data/*
+
 AGENTS.md
 legacy/
-docs/project_details.docx
