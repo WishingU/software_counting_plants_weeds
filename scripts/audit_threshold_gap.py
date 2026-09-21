@@ -8,7 +8,7 @@ that confirms the threshold change is trading away real detections, not
 just filtering noise.
 
 Usage:
-    python scripts/audit_threshold_gap.py --weights runs/colab_50epoch/best.pt --n 30
+    python scripts/audit_threshold_gap.py --weights models/counting/yolov8n-50e.pt --n 30
 """
 
 import argparse

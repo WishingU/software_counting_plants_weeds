@@ -1,32 +1,52 @@
-# Handover — Counting & Species ID work (venn branch)
+# Project handover
 
-Summary of my work so far, for whoever's picking this up.
+This document describes the consolidated project state. Branch-specific notes
+have been folded into the maintained structure.
 
-## What's done
+## Available workflows
 
-**Item 1 (counting, 45%) — complete and validated.**
-- Data pipeline: `scripts/coco_to_yolo.py` converts the source COCO dataset into YOLO format, merging weed species into one `weed` class.
-- Trained model: `runs/colab_50epoch/best.pt` (YOLOv8n, 640px, 50 epochs). This is what `count_plants.py` and `app.py` use by default.
-- Validated accuracy against all 301 held-out test images: crop counts within 2 plants 92% of the time, weed 84%, combined 79%.
-- Production settings: `conf=0.25`, `iou=0.3` — both were deliberately tuned, not defaults (see "Important gotchas" below).
+- Crop/weed counting through app.py and count_plants.py.
+- Optional green-dominance enhancement in both inference entry points. It is
+  disabled by default so existing inference behavior remains unchanged.
+- Four-species dataset, training, and evaluation through src/plant_counter/.
+- Dataset conversion, annotation diagnostics, threshold audits, and image
+  preparation under scripts/.
+- Automated tests under tests/.
 
-**Item 2 (species ID, 35%) — in progress.**
-- Data pipeline: `scripts/coco_to_yolo_species.py` — same idea but keeps all 4 species separate (wheat, wild oat, brome grass, barley grass) instead of merging.
-- Trained models: `runs/colab_species_50epoch/best.pt` and the better one, `runs/colab_species_100epoch/best.pt` (precision 0.73, recall 0.68).
-- Confusion matrix (`scripts/species_confusion_matrix.py`) shows wheat is reliably distinguished from weeds (~69%+ correct), but the three weed species get confused mainly with *each other*, not with wheat — makes sense, they're visually similar grasses. Missed detections (not finding a plant at all) are rare (~1-2%) across all species, so the weakness is specifically fine-grained species labeling, not detection itself.
+## Curated checkpoints
 
-## What's not done yet (my part)
+- models/counting/yolov8n-50e.pt: default crop/weed model.
+- models/counting/yolov8n-100e.pt: longer-trained crop/weed model.
+- models/counting/yolov8s-comparison.pt: larger counting comparison.
+- models/species/yolov8n-50e.pt: four-species baseline.
+- models/species/yolov8n-100e.pt: preferred four-species model.
 
-- Was about to try a bigger model (`yolov8s` instead of `yolov8n`) for species ID to see if it improves further — stopped before starting this.
-- `count_plants.py` and `app.py` still only output crop/weed — they haven't been updated to show per-species results using the species model. That's a real gap: the species model exists but isn't wired into the user-facing tools yet.
+Generated runs belong in runs/ or outputs/; do not promote an entire run
+directory into Git.
 
-## Important gotchas — read before changing settings
+## Validated counting settings
 
-1. **The original dataset has real labeling gaps.** A systematic audit (70 randomly sampled "false positive" detections, manually zoomed in and checked) found almost all were real plants the annotators missed, not model errors. So raw precision numbers understate true accuracy — see `scripts/audit_false_positives.py` / `scripts/audit_threshold_gap.py` for methodology if you want to re-verify or extend this.
-2. **Don't raise the confidence threshold without re-checking this.** I initially raised it from 0.25 to 0.35 to improve a precision metric, but the audit above showed this was discarding real plant detections, not just noise — it made actual counting accuracy worse (pushed the model into undercounting). Reverted back to 0.25 for that reason.
-3. Evaluation scripts to use for checking accuracy: `scripts/evaluate_counts.py` (counting error), `scripts/evaluate_counts_corrected.py` (same, adjusted for the known labeling gaps), `scripts/evaluate_plant_detection.py` (class-agnostic precision/recall with threshold sweep).
+- Confidence threshold: 0.25.
+- NMS IoU threshold: 0.3.
+- The original annotations have known gaps. Manual audits found that many
+  apparent false positives were real plants missing from the labels.
+- Raising confidence solely to improve raw precision can worsen real counting
+  accuracy through undercounting.
 
-## Other team context worth knowing
+The specialized scripts under scripts/ preserve the original audit and
+corrected-count workflows.
 
-- `afridi-deployment` branch already has a working Streamlit Cloud deployment with a documented test URL — worth checking that before doing any deployment work yourself.
-- `feature/deployment` branch has a significant restructuring in progress (proper `src/plant_counter/` package, tests, an annotation guide at `docs/ANNOTATION_GUIDE.en.md`, multi-language READMEs). Worth checking there before duplicating structure/doc work.
+## Known follow-up work
+
+- Compare curated checkpoints on one fixed independent test split and document
+  the selected production model.
+- Improve separation among wild oat, brome grass, and barley grass.
+- Add automated smoke coverage for the Streamlit inference path.
+- Decide whether large curated checkpoints should move to Git LFS or release
+  assets before the repository grows further.
+
+## Deployment
+
+A test deployment exists at
+[crop-weed-counter-afridi.streamlit.app](https://crop-weed-counter-afridi.streamlit.app/).
+Deployment functionality and model accuracy should be verified independently.

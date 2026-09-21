@@ -5,7 +5,7 @@ the confusion matrix plot, so we can see specifically which species get
 mixed up with which, rather than just an aggregate accuracy number.
 
 Usage:
-    python scripts/species_confusion_matrix.py --weights runs/colab_species_50epoch/best.pt
+    python scripts/species_confusion_matrix.py --weights models/species/yolov8n-100e.pt
 """
 
 import argparse

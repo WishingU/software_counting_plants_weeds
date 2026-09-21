@@ -1,70 +1,51 @@
-# Windows 11 Setup Guide
+# Windows 11 setup
 
-This project has been configured for the current computer:
+## Environment
 
-- Project directory: `E:\win11_iso\software_counting_plants_weeds`
-- Conda environment: `plant-count`
-- GPU: NVIDIA GeForce RTX 5060 Laptop GPU
-- Dataset configuration: `data\yolo\data.yaml`
-
-## Activate the Environment
-
-```powershell
+~~~powershell
 cd E:\win11_iso\software_counting_plants_weeds
 conda activate plant-count
-```
+python -m pip install -e ".[app,tools]" --no-build-isolation
+~~~
 
-## Run Sample Inference
+## Sample inference
 
-```powershell
-python .\count_plants.py .\data\raw_images\sample.png --device 0
-```
+~~~powershell
+python count_plants.py data\raw_images\sample.png --device 0
+python count_plants.py data\raw_images\sample.png --device 0 --enhance-green
+~~~
 
-## Launch the Web Application
+The default checkpoint is models\counting\yolov8n-50e.pt. Select another
+model with --weights. Add --enhance-green to enable optional green enhancement.
 
-```powershell
-python -m streamlit run .\app.py
-```
+## Web application
 
-## Train from YOLOv8n
+~~~powershell
+python -m streamlit run app.py
+~~~
 
-```powershell
-python .\scripts\train.py --model yolov8n.pt --epochs 100 --batch 8 --device 0
-```
+Use the **Enhance green vegetation** switch in the inference sidebar to turn
+green enhancement on or off. It is off by default.
 
-Training results are saved to `runs\crop_weed_v1`. If GPU memory is insufficient,
-change `--batch 8` to `--batch 4`.
+## Training
 
-## Continue Training from an Existing Model
+~~~powershell
+python -m plant_counter.train --data data\yolo\data.yaml --model yolov8n.pt --epochs 100 --batch 8 --device 0 --project outputs\runs\detect --name crop_weed_v1
+~~~
 
-```powershell
-python .\scripts\train.py `
-  --model .\runs\colab_50epoch\best.pt `
-  --epochs 50 `
-  --batch 8 `
-  --device 0 `
-  --name crop_weed_finetune_v1
-```
+If GPU memory is insufficient, reduce --batch 8 to --batch 4.
 
-## Evaluate Counting on the Independent Test Set
+To continue from a curated checkpoint:
 
-```powershell
-python .\scripts\evaluate_counts.py `
-  --weights .\runs\crop_weed_v1\weights\best.pt `
-  --split test `
-  --device 0
-```
+~~~powershell
+python -m plant_counter.train --data data\yolo\data.yaml --model models\counting\yolov8n-50e.pt --epochs 50 --batch 8 --device 0 --project outputs\runs\detect --name crop_weed_finetune_v1
+~~~
 
-Run the following command to calculate standard detection metrics:
+## Final evaluation
 
-```powershell
-yolo detect val `
-  model=E:/win11_iso/software_counting_plants_weeds/runs/crop_weed_v1/weights/best.pt `
-  data=E:/win11_iso/software_counting_plants_weeds/data/yolo/data.yaml `
-  split=test `
-  device=0 `
-  workers=0
-```
+~~~powershell
+python -m plant_counter.evaluate --model outputs\runs\detect\crop_weed_v1\weights\best.pt --data data\yolo\data.yaml --split test --device 0 --output-dir outputs\runs\evaluation\crop_weed_v1
+~~~
 
-The `test` split is reserved for final evaluation and must not be used for
-training or hyperparameter selection.
+Reserve the test split for final evaluation. Use train/validation data for
+model selection and parameter tuning.

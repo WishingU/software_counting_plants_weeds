@@ -1,4 +1,3 @@
-path: /Users/vennilamoorooven/software_counting_plants_weeds/data/yolo_species
 train: images/train
 val: images/val
 names:
