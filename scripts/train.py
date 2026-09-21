@@ -1,8 +1,9 @@
 """Train a YOLO model on Windows with automatic NVIDIA GPU selection.
 
 Usage:
-    python scripts/train.py --epochs 3     # quick smoke test
-    python scripts/train.py --epochs 50    # real training run
+    python scripts/train.py --epochs 3                                          # quick smoke test, crop/weed
+    python scripts/train.py --epochs 50                                         # real training run, crop/weed
+    python scripts/train.py --epochs 50 --data data/yolo_species/data.yaml --name species_id  # species model
 
 Uses NVIDIA CUDA when available and falls back to CPU. Paths are resolved
 from this file, so the command works from any current working directory.
@@ -21,6 +22,9 @@ RUNS_DIR = PROJECT_ROOT / "runs"
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=str, default="data/yolo/data.yaml", help="Path to dataset yaml")
+    parser.add_argument("--name", type=str, default="crop_weed_counter", help="Run name under runs/")
+    parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--model", type=str, default="yolo8m.pt")
@@ -40,11 +44,14 @@ def main() -> None:
 
     model = YOLO(args.model)
     model.train(
+        data=args.data,
         data=str(data_path),
         epochs=args.epochs,
         imgsz=args.imgsz,
         batch=args.batch,
         device=device,
+        project="runs",
+        name=args.name,
         workers=args.workers,
         patience=args.patience,
         seed=0,

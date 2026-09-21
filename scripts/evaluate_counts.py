@@ -45,6 +45,7 @@ def main() -> None:
     parser.add_argument("--split", choices=("train", "val", "test"), default="test")
     parser.add_argument("--conf", type=float, default=0.25)
     parser.add_argument("--iou", type=float, default=0.3, help="NMS IoU threshold - lower merges nearby boxes more aggressively")
+    parser.add_argument("--augment", action="store_true", help="Enable test-time augmentation (slower, no retraining needed)")
     parser.add_argument("--device", default="0")
     args = parser.parse_args()
 
@@ -60,6 +61,7 @@ def main() -> None:
         label_path = labels_dir / (image_path.stem + ".txt")
         truth = ground_truth_counts(label_path)
 
+        result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, augment=args.augment, verbose=False)[0]
         result = model.predict(source=str(image_path), conf=args.conf, iou=args.iou, device=args.device, verbose=False)[0]
         pred = predicted_counts(result)
 
