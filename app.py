@@ -13,7 +13,7 @@ from plant_counter.preprocess import enhance_green
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_WEIGHTS = BASE_DIR / "models" / "counting" / "yolov8n-50e.pt"
+DEFAULT_WEIGHTS = BASE_DIR / "models" / "counting" / "yolov8n-100e.pt"
 SUPPORTED_UPLOAD_TYPES = ["jpg", "jpeg", "png"]
 
 

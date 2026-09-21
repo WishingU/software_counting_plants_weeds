@@ -7,8 +7,8 @@ Generated training runs belong under runs/ or outputs/ and are ignored by Git.
 
 | File | Purpose |
 | --- | --- |
-| counting/yolov8n-50e.pt | Default crop/weed counter |
-| counting/yolov8n-100e.pt | Longer-trained crop/weed counter |
+| counting/yolov8n-100e.pt | Default crop/weed counter |
+| counting/yolov8n-50e.pt | Shorter-trained crop/weed counter |
 | counting/yolov8s-comparison.pt | Larger comparison model |
 
 ## Species models
