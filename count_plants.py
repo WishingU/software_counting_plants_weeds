@@ -34,7 +34,7 @@ from ultralytics import YOLO
 from plant_counter.preprocess import enhance_green
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DEFAULT_WEIGHTS = PROJECT_ROOT / "models" / "counting" / "yolov8n-50e.pt"
+DEFAULT_WEIGHTS = PROJECT_ROOT / "models" / "counting" / "yolov8n-100e.pt"
 
 
 def count_plants(

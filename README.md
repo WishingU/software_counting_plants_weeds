@@ -44,7 +44,7 @@ python -m streamlit run app.py
 ~~~
 
 The application discovers checkpoints under models/ and runs/. The default is
-models/counting/yolov8n-50e.pt.
+models/counting/yolov8n-100e.pt.
 
 Enable **Enhance green vegetation** in the inference sidebar to mildly boost
 pixels that are already green-dominant. The preview shows the exact image sent
@@ -67,7 +67,7 @@ Install the project first, then use the maintained package entry points:
 ~~~powershell
 python -m plant_counter.train --data data/yolo/data.yaml --model yolov8n.pt --project outputs/runs/detect --name crop_weed_v1
 
-python -m plant_counter.evaluate --model models/counting/yolov8n-50e.pt --data data/yolo/data.yaml --split test --output-dir outputs/runs/evaluation/crop_weed
+python -m plant_counter.evaluate --model models/counting/yolov8n-100e.pt --data data/yolo/data.yaml --split test --output-dir outputs/runs/evaluation/crop_weed
 ~~~
 
 Specialized audits and comparison tools remain under scripts/.
