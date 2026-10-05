@@ -1,6 +1,18 @@
 """Interactive Streamlit frontend for plant detection and segmentation models."""
 
+import hashlib
 from pathlib import Path
+import sys
+import tempfile
+
+
+BASE_DIR = Path(__file__).resolve().parent
+SRC_DIR = BASE_DIR / "src"
+
+# Allow ``streamlit run app.py`` to import the local src-layout package even
+# when the project has not been installed in editable mode.
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 import cv2
 import numpy as np
@@ -12,11 +24,6 @@ from ultralytics import YOLO
 from plant_counter.preprocess import enhance_green
 
 
-BASE_DIR = Path(__file__).resolve().parent
-
-# Use the YOLOv8s species-identification model by default.
-DEFAULT_WEIGHTS = BASE_DIR / "models" / "species" / "yolov8s-100e.pt"
-
 SUPPORTED_UPLOAD_TYPES = ["jpg", "jpeg", "png"]
 
 SPECIES_ORDER = [
@@ -27,26 +34,16 @@ SPECIES_ORDER = [
 ]
 
 
-def discover_models() -> list[Path]:
-    """Find local Ultralytics weights, preferring trained best checkpoints."""
-    candidates = set(BASE_DIR.glob("*.pt"))
-
-    for directory in (BASE_DIR / "models", BASE_DIR / "runs"):
-        if directory.is_dir():
-            candidates.update(directory.rglob("*.pt"))
-
-    return sorted(
-        (path.resolve() for path in candidates if path.is_file()),
-        key=lambda path: (path.name != "best.pt", str(path).lower()),
-    )
-
-
-def display_path(path: Path) -> str:
-    """Display a path relative to the project directory where possible."""
-    try:
-        return str(path.relative_to(BASE_DIR))
-    except ValueError:
-        return str(path)
+def materialize_uploaded_model(uploaded_file) -> Path:
+    """Persist uploaded model bytes under a content-addressed temporary path."""
+    payload = uploaded_file.getvalue()
+    digest = hashlib.sha256(payload).hexdigest()
+    model_dir = Path(tempfile.gettempdir()) / "plant_weed_analyzer_models"
+    model_dir.mkdir(parents=True, exist_ok=True)
+    model_path = model_dir / f"{digest}.pt"
+    if not model_path.exists():
+        model_path.write_bytes(payload)
+    return model_path
 
 
 @st.cache_resource(show_spinner=False)
@@ -79,53 +76,24 @@ st.write(
 )
 
 
-models = discover_models()
-
-if not models:
-    st.error(
-        "No .pt model weights were found in the project root, models/, or runs/."
-    )
-    st.stop()
-
-
-default_resolved = DEFAULT_WEIGHTS.resolve()
-
-default_index = (
-    models.index(default_resolved)
-    if default_resolved in models
-    else 0
-)
-
-
 with st.sidebar:
     st.header("Model")
 
-    selected_weights = st.selectbox(
-        "Project model",
-        options=models,
-        index=default_index,
-        format_func=display_path,
-        help="Models are discovered from the project root, models/, and runs/.",
+    uploaded_model = st.file_uploader(
+        "Load model weights",
+        type=["pt"],
+        key="model_weights",
+        help=(
+            "Choose a trusted Ultralytics .pt weights file from your computer. "
+            "Model files can contain executable data, so do not load untrusted files."
+        ),
     )
 
-    custom_weights = st.text_input(
-        "Custom model path (optional)",
-        placeholder=r"E:\path\to\best.pt",
-        help="When set, this path overrides the project model selected above.",
-    ).strip()
-
-    if custom_weights:
-        custom_path = Path(custom_weights).expanduser()
-
-        weights_path = (
-            custom_path
-            if custom_path.is_absolute()
-            else BASE_DIR / custom_path
-        )
-    else:
-        weights_path = selected_weights
-
-    weights_path = weights_path.resolve()
+    weights_path = (
+        materialize_uploaded_model(uploaded_model)
+        if uploaded_model is not None
+        else None
+    )
 
     st.header("Inference parameters")
 
@@ -188,9 +156,10 @@ with st.sidebar:
 
     st.divider()
 
-    st.caption(
-        f"Selected weights: `{display_path(weights_path)}`"
-    )
+    if uploaded_model is None:
+        st.caption("No model weights loaded.")
+    else:
+        st.caption(f"Loaded model: `{uploaded_model.name}`")
 
 
 uploaded_file = st.file_uploader(
@@ -232,6 +201,10 @@ if uploaded_file is not None:
         use_container_width=True,
     ):
 
+        if weights_path is None:
+            st.error("Load a .pt model weights file before running analysis.")
+            st.stop()
+
         if not weights_path.is_file():
             st.error(
                 f"Model weights not found: {weights_path}"
@@ -240,7 +213,7 @@ if uploaded_file is not None:
 
         try:
             with st.spinner(
-                f"Loading {display_path(weights_path)} "
+                f"Loading {uploaded_model.name} "
                 "and running inference..."
             ):
                 model = load_model(
@@ -248,8 +221,16 @@ if uploaded_file is not None:
                     weights_path.stat().st_mtime_ns,
                 )
 
+                # Ultralytics interprets NumPy image sources as OpenCV BGR.
+                # The uploaded PIL image and green enhancement pipeline use RGB,
+                # so convert explicitly to avoid swapping the red and blue channels.
+                inference_bgr = cv2.cvtColor(
+                    inference_rgb,
+                    cv2.COLOR_RGB2BGR,
+                )
+
                 predict_args = {
-                    "source": inference_rgb,
+                    "source": inference_bgr,
                     "conf": confidence,
                     "iou": iou,
                     "imgsz": image_size,

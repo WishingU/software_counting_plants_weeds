@@ -48,6 +48,7 @@ data/yolo_species/*
 runs/
 outputs/
 archives/
+external/
 Ultralytics/
 build_report.json
 
