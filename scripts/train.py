@@ -1,64 +1,21 @@
-"""Train a YOLO model on Windows with automatic NVIDIA GPU selection.
+"""Compatibility entry point for the maintained training CLI.
 
-Usage:
-    python scripts/train.py --epochs 3                                          # quick smoke test, crop/weed
-    python scripts/train.py --epochs 50                                         # real training run, crop/weed
-    python scripts/train.py --epochs 50 --data data/yolo_species/data.yaml --name species_id  # species model
-
-Uses NVIDIA CUDA when available and falls back to CPU. Paths are resolved
-from this file, so the command works from any current working directory.
+This wrapper keeps ``python scripts/train.py`` working while all argument
+definitions and reproducibility metadata remain in ``plant_counter.train``.
 """
 
-import argparse
+from __future__ import annotations
+
+import sys
 from pathlib import Path
 
-import torch
-from ultralytics import YOLO
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_YAML = PROJECT_ROOT / "data" / "yolo" / "data.yaml"
-RUNS_DIR = PROJECT_ROOT / "runs"
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=str, default="data/yolo/data.yaml", help="Path to dataset yaml")
-    parser.add_argument("--name", type=str, default="crop_weed_counter", help="Run name under runs/")
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--imgsz", type=int, default=640)
-    parser.add_argument("--model", type=str, default="yolo8m.pt")
-    parser.add_argument("--data", type=Path, default=DATA_YAML)
-    parser.add_argument("--batch", type=int, default=8)
-    parser.add_argument("--device", help="CUDA device such as 0, or cpu (default: auto)")
-    parser.add_argument("--workers", type=int, default=0)
-    parser.add_argument("--patience", type=int, default=20)
-    parser.add_argument("--name", default="crop_weed_v1")
-    args = parser.parse_args()
-
-    data_path = args.data.resolve()
-    if not data_path.is_file():
-        raise SystemExit(f"Dataset configuration does not exist: {data_path}")
-    device = args.device if args.device is not None else ("0" if torch.cuda.is_available() else "cpu")
-    print(f"Training on device: {device}")
-
-    model = YOLO(args.model)
-    model.train(
-        data=args.data,
-        data=str(data_path),
-        epochs=args.epochs,
-        imgsz=args.imgsz,
-        batch=args.batch,
-        device=device,
-        project="runs",
-        name=args.name,
-        workers=args.workers,
-        patience=args.patience,
-        seed=0,
-        deterministic=True,
-        project=str(RUNS_DIR),
-        name=args.name,
-    )
+from plant_counter.train import main  # noqa: E402
 
 
 if __name__ == "__main__":

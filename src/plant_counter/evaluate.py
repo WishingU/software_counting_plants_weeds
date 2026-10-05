@@ -57,6 +57,7 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--split", choices=("train", "val", "test"), default="val")
     parser.add_argument("--conf", type=float, default=0.25)
     parser.add_argument("--iou", type=float, default=0.7)
+    parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--device", default="0")
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -76,6 +77,7 @@ def main() -> None:
     validation = model.val(
         data=str(args.data.resolve()),
         split=args.split,
+        imgsz=args.imgsz,
         device=args.device,
         plots=True,
         workers=args.workers,
@@ -84,7 +86,12 @@ def main() -> None:
         exist_ok=True,
     )
     results = model.predict(
-        source=str(images_dir), conf=args.conf, iou=args.iou, device=args.device, stream=True
+        source=str(images_dir),
+        conf=args.conf,
+        iou=args.iou,
+        imgsz=args.imgsz,
+        device=args.device,
+        stream=True,
     )
 
     truth_counts: list[Counter[int]] = []
@@ -115,7 +122,12 @@ def main() -> None:
         "map50": float(validation.box.map50),
         "map50_95": float(validation.box.map),
     }
-    summary["settings"] = {"confidence": args.conf, "iou": args.iou, "split": args.split}
+    summary["settings"] = {
+        "confidence": args.conf,
+        "iou": args.iou,
+        "imgsz": args.imgsz,
+        "split": args.split,
+    }
     (args.output_dir / "summary.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"
     )
