@@ -101,7 +101,7 @@ with st.sidebar:
         "Confidence threshold",
         0.0,
         1.0,
-        0.25,
+        0.40,
         0.01,
     )
 
@@ -109,15 +109,15 @@ with st.sidebar:
         "IoU threshold",
         0.05,
         0.95,
-        0.30,
+        0.70,
         0.05,
         help="Lower values suppress overlapping predictions more aggressively.",
     )
 
     image_size = st.select_slider(
         "Input image size",
-        options=[320, 480, 640, 800, 1024, 1280],
-        value=640,
+        options=[320, 480, 640, 768, 800, 1024, 1280],
+        value=768,
     )
 
     max_detections = st.number_input(
@@ -247,7 +247,6 @@ if uploaded_file is not None:
             st.error(f"Inference failed: {exc}")
             st.stop()
 
-
         names = {
             int(index): str(name)
             for index, name in model.names.items()
@@ -266,14 +265,12 @@ if uploaded_file is not None:
                     counts.get(class_name, 0) + 1
                 )
 
-
         annotated_bgr = result.plot()
 
         annotated_rgb = cv2.cvtColor(
             annotated_bgr,
             cv2.COLOR_BGR2RGB,
         )
-
 
         result_column, count_column = st.columns([3, 1])
 

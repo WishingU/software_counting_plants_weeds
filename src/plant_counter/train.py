@@ -24,6 +24,12 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", default="0")
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--patience", type=int, default=15)
+    parser.add_argument("--optimizer", default="auto")
+    parser.add_argument("--lr0", type=float)
+    parser.add_argument("--lrf", type=float)
+    parser.add_argument("--weight-decay", type=float)
+    parser.add_argument("--close-mosaic", type=int)
+    parser.add_argument("--warmup-epochs", type=float)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--project", type=Path, default=Path("outputs/runs/detect"))
     parser.add_argument("--name", default="baseline_v1")
@@ -58,7 +64,7 @@ def main() -> None:
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
     model = YOLO(args.model)
-    model.train(
+    train_arguments = dict(
         data=str(args.data.resolve()),
         epochs=args.epochs,
         imgsz=args.imgsz,
@@ -71,6 +77,13 @@ def main() -> None:
         project=str(args.project.resolve()),
         name=args.name,
     )
+    for name in ("lr0", "lrf", "weight_decay", "close_mosaic", "warmup_epochs"):
+        value = getattr(args, name)
+        if value is not None:
+            train_arguments[name] = value
+    if args.optimizer != "auto":
+        train_arguments["optimizer"] = args.optimizer
+    model.train(**train_arguments)
 
 
 if __name__ == "__main__":
