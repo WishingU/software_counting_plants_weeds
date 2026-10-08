@@ -83,9 +83,13 @@ python scripts/heic_to_jpeg.py data/heic data/jpeg
 ## Tests
 
 ~~~powershell
-$env:PYTHONPATH = "$PWD\src"
-python -m unittest discover -s tests -v
+python -m pip install -r requirements-dev.txt
+python -m pytest -v -m "not slow and not model and not acceptance"
 ~~~
+
+Pytest also discovers and runs the existing `unittest.TestCase` tests. Real-model
+and acceptance tests are opt-in; see `AGENTS.md` for the test levels and evidence
+requirements.
 
 The public Streamlit deployment is available for functional testing at
 [crop-weed-counter-afridi.streamlit.app](https://crop-weed-counter-afridi.streamlit.app/).

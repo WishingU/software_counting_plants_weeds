@@ -31,3 +31,13 @@ plant-evaluate = "plant_counter.evaluate:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]
+addopts = "-ra --strict-markers"
+markers = [
+  "slow: tests that are too slow for the default fast suite",
+  "model: tests that load real model weights or run real inference",
+  "acceptance: end-to-end tests traced to an agreed project requirement",
+]
