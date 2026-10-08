@@ -13,3 +13,5 @@ Note: The first run failed with "No module named pytest". requirements-dev.txt d
 ## Finding: model weights are Git LFS pointers (2026-10-08)
 After pulling main, `ls -lh models/*/` showed every .pt file at about 132-133 bytes, so they are LFS pointers and not real weights. README.md does not mention `git lfs pull`.
 models/broadleaf/yolo26m_broadleaf.pt: expected size 44,020,313 bytes, SHA-256 edf2cab2d4185f8dd4ae27931c83d6cf57b5d1ae5c163c5c390da3c8e8192f01
+
+Update: after pulling main on 2026-10-08, requirements-dev.txt lists `pytest>=8.4,<10` and `pytest-cov>=7,<8`, so this issue appears to be fixed in main.
