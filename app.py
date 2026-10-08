@@ -33,21 +33,40 @@ SPECIES_ORDER = [
     "barley grass",
 ]
 
+# Final full-dataset species-identification model.
+DEFAULT_WEIGHTS_PATH = (
+    BASE_DIR / "models" / "species" / "yolov8s_full.pt"
+)
+
 
 def materialize_uploaded_model(uploaded_file) -> Path:
     """Persist uploaded model bytes under a content-addressed temporary path."""
     payload = uploaded_file.getvalue()
     digest = hashlib.sha256(payload).hexdigest()
-    model_dir = Path(tempfile.gettempdir()) / "plant_weed_analyzer_models"
-    model_dir.mkdir(parents=True, exist_ok=True)
+
+    model_dir = (
+        Path(tempfile.gettempdir())
+        / "plant_weed_analyzer_models"
+    )
+
+    model_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     model_path = model_dir / f"{digest}.pt"
+
     if not model_path.exists():
         model_path.write_bytes(payload)
+
     return model_path
 
 
 @st.cache_resource(show_spinner=False)
-def load_model(weights_path: str, modified_ns: int) -> YOLO:
+def load_model(
+    weights_path: str,
+    modified_ns: int,
+) -> YOLO:
     """Cache a model until the selected weights file changes on disk."""
     del modified_ns
 
@@ -72,7 +91,8 @@ st.set_page_config(
 st.title("Plant & Weed Analyzer")
 
 st.write(
-    "Upload a field image to detect, identify, and count wheat and weed species."
+    "Upload a field image to detect, identify, "
+    "and count wheat and weed species."
 )
 
 
@@ -84,15 +104,20 @@ with st.sidebar:
         type=["pt"],
         key="model_weights",
         help=(
-            "Choose a trusted Ultralytics .pt weights file from your computer. "
-            "Model files can contain executable data, so do not load untrusted files."
+            "Optionally choose a trusted Ultralytics .pt weights file "
+            "from your computer. If no model is uploaded, the final "
+            "project YOLOv8s species-identification model is used. "
+            "Model files can contain executable data, so do not load "
+            "untrusted files."
         ),
     )
 
+    # Use a custom uploaded model when provided.
+    # Otherwise use the final project species-identification model.
     weights_path = (
         materialize_uploaded_model(uploaded_model)
         if uploaded_model is not None
-        else None
+        else DEFAULT_WEIGHTS_PATH
     )
 
     st.header("Inference parameters")
@@ -111,12 +136,23 @@ with st.sidebar:
         0.95,
         0.70,
         0.05,
-        help="Lower values suppress overlapping predictions more aggressively.",
+        help=(
+            "Lower values suppress overlapping "
+            "predictions more aggressively."
+        ),
     )
 
     image_size = st.select_slider(
         "Input image size",
-        options=[320, 480, 640, 768, 800, 1024, 1280],
+        options=[
+            320,
+            480,
+            640,
+            768,
+            800,
+            1024,
+            1280,
+        ],
         value=768,
     )
 
@@ -157,9 +193,21 @@ with st.sidebar:
     st.divider()
 
     if uploaded_model is None:
-        st.caption("No model weights loaded.")
+        st.caption(
+            "Default model: `yolov8s_full.pt`"
+        )
+        st.caption(
+            "Upload another `.pt` file above to temporarily "
+            "override the project model."
+        )
     else:
-        st.caption(f"Loaded model: `{uploaded_model.name}`")
+        st.caption(
+            f"Using custom model: `{uploaded_model.name}`"
+        )
+        st.caption(
+            "Remove the uploaded file to return to "
+            "`yolov8s_full.pt`."
+        )
 
 
 uploaded_file = st.file_uploader(
@@ -170,7 +218,9 @@ uploaded_file = st.file_uploader(
 
 
 if uploaded_file is not None:
-    preview = Image.open(uploaded_file).convert("RGB")
+    preview = Image.open(
+        uploaded_file
+    ).convert("RGB")
 
     original_rgb = np.asarray(preview)
 
@@ -186,7 +236,9 @@ if uploaded_file is not None:
         else "Inference input (original image)"
     )
 
-    _, preview_column, _ = st.columns([1, 2, 1])
+    _, preview_column, _ = st.columns(
+        [1, 2, 1]
+    )
 
     with preview_column:
         st.image(
@@ -201,19 +253,21 @@ if uploaded_file is not None:
         use_container_width=True,
     ):
 
-        if weights_path is None:
-            st.error("Load a .pt model weights file before running analysis.")
-            st.stop()
-
         if not weights_path.is_file():
             st.error(
                 f"Model weights not found: {weights_path}"
             )
             st.stop()
 
+        model_name = (
+            uploaded_model.name
+            if uploaded_model is not None
+            else DEFAULT_WEIGHTS_PATH.name
+        )
+
         try:
             with st.spinner(
-                f"Loading {uploaded_model.name} "
+                f"Loading {model_name} "
                 "and running inference..."
             ):
                 model = load_model(
@@ -223,7 +277,7 @@ if uploaded_file is not None:
 
                 # Ultralytics interprets NumPy image sources as OpenCV BGR.
                 # The uploaded PIL image and green enhancement pipeline use RGB,
-                # so convert explicitly to avoid swapping the red and blue channels.
+                # so convert explicitly to avoid swapping red and blue channels.
                 inference_bgr = cv2.cvtColor(
                     inference_rgb,
                     cv2.COLOR_RGB2BGR,
@@ -241,15 +295,20 @@ if uploaded_file is not None:
                 if device is not None:
                     predict_args["device"] = device
 
-                result = model.predict(**predict_args)[0]
+                result = model.predict(
+                    **predict_args
+                )[0]
 
         except Exception as exc:
-            st.error(f"Inference failed: {exc}")
+            st.error(
+                f"Inference failed: {exc}"
+            )
             st.stop()
 
         names = {
             int(index): str(name)
-            for index, name in model.names.items()
+            for index, name
+            in model.names.items()
         }
 
         counts = {
@@ -258,11 +317,22 @@ if uploaded_file is not None:
         }
 
         if result.boxes is not None:
-            for class_id in result.boxes.cls.int().cpu().tolist():
+            class_ids = (
+                result.boxes.cls
+                .int()
+                .cpu()
+                .tolist()
+            )
+
+            for class_id in class_ids:
                 class_name = names[class_id]
 
                 counts[class_name] = (
-                    counts.get(class_name, 0) + 1
+                    counts.get(
+                        class_name,
+                        0,
+                    )
+                    + 1
                 )
 
         annotated_bgr = result.plot()
@@ -272,11 +342,14 @@ if uploaded_file is not None:
             cv2.COLOR_BGR2RGB,
         )
 
-        result_column, count_column = st.columns([3, 1])
-
+        result_column, count_column = (
+            st.columns([3, 1])
+        )
 
         with result_column:
-            st.subheader("Analysis result")
+            st.subheader(
+                "Analysis result"
+            )
 
             st.image(
                 annotated_rgb,
@@ -284,11 +357,14 @@ if uploaded_file is not None:
                 width="stretch",
             )
 
-
         with count_column:
-            st.subheader("Species Counts")
+            st.subheader(
+                "Species Counts"
+            )
 
-            total_count = sum(counts.values())
+            total_count = sum(
+                counts.values()
+            )
 
             st.metric(
                 "Total Plants",
@@ -305,27 +381,43 @@ if uploaded_file is not None:
                     )
 
             # Keep compatibility with other models such as
-            # the older crop/weed counting models.
+            # older crop/weed counting or custom models.
             for name, count in counts.items():
                 if name not in SPECIES_ORDER:
+                    display_name = (
+                        name
+                        .replace(
+                            "_",
+                            " ",
+                        )
+                        .title()
+                    )
+
                     st.metric(
-                        name.replace("_", " ").title(),
+                        display_name,
                         count,
                     )
 
+            st.subheader(
+                "Model information"
+            )
 
-            st.subheader("Model information")
+            st.write(
+                f"Model: `{model_name}`"
+            )
 
             st.write(
                 f"Task: `{model.task}`"
             )
 
             st.write(
-                f"Classes: `{', '.join(names.values())}`"
+                f"Classes: "
+                f"`{', '.join(names.values())}`"
             )
 
             st.write(
-                f"Device: `{selected_device}`"
+                f"Device: "
+                f"`{selected_device}`"
             )
 
             st.write(
