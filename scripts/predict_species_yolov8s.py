@@ -7,7 +7,7 @@ from ultralytics import YOLO
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-MODEL_PATH = Path("models") / "species" / "yolov8s-100e.pt"
+MODEL_PATH = Path("models") / "species" / "yolov8s_full.pt"
 
 
 def main():
