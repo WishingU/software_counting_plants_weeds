@@ -14,4 +14,4 @@ The model can identify the following four classes:
 The trained model weights are stored at:
 
 ```text
-models/species/yolov8s-100e.pt
+models/species/yolov8s_full.pt
