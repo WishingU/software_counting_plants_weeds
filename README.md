@@ -5,7 +5,6 @@ plant identification with Ultralytics YOLO models. It includes a Streamlit
 interface, command-line inference, dataset utilities, evaluation scripts,
 curated checkpoints, and automated tests.
 
-[Windows setup](README_WINDOWS.md) ·
 [Annotation guide](docs/ANNOTATION_GUIDE.en.md)
 
 ## Project layout

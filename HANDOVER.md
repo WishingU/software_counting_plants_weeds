@@ -1,52 +1,125 @@
 # Project handover
 
-This document describes the consolidated project state. Branch-specific notes
-have been folded into the maintained structure.
+This document summarizes the maintained project state on `main`. Model quality,
+local execution, and public deployment status must be verified separately.
+
+## Current application
+
+`app.py` provides an integrated Streamlit and Ultralytics YOLO application for
+image upload, optional green-vegetation enhancement, inference, annotated
+results, and per-class counting.
+
+The sidebar exposes three repository-managed models:
+
+| Application option | Checkpoint | Confidence | IoU | Input size |
+| --- | --- | ---: | ---: | ---: |
+| Species Detection | `models/species/yolov8s_full.pt` | 0.40 | 0.70 | 768 |
+| Broadleaf Detection | `models/broadleaf/yolo26m_broadleaf.pt` | 0.40 | 0.70 | 768 |
+| Crop & Weed Counting | `models/counting/yolov8n-100e.pt` | 0.25 | 0.30 | 640 |
+
+Species Detection is selected by default. The application loads the selected
+checkpoint automatically, caches model resources, and reports unresolved Git
+LFS pointers. It does not accept arbitrary model uploads.
 
 ## Available workflows
 
-- Crop/weed counting through app.py and count_plants.py.
-- Optional green-dominance enhancement in both inference entry points. It is
-  disabled by default so existing inference behavior remains unchanged.
-- Four-species dataset, training, and evaluation through src/plant_counter/.
-- Dataset conversion, annotation diagnostics, threshold audits, and image
-  preparation under scripts/.
-- Automated tests under tests/.
+- Three-model inference and counting through `app.py`.
+- Crop/weed command-line inference through `count_plants.py`.
+- Four-species image or folder inference through
+  `scripts/predict_species_yolov8s.py`.
+- Optional green-dominance enhancement in the Streamlit and crop/weed CLI
+  workflows; it is disabled by default.
+- Dataset conversion, annotation diagnostics, threshold audits, image
+  preparation, training, and evaluation through `src/plant_counter/` and
+  `scripts/`.
+- Fast mocked unit tests under `tests/` that do not require model downloads,
+  a GPU, full training, or full-dataset inference.
 
-## Curated checkpoints
+## Model storage and Git LFS
 
-- models/counting/yolov8n-50e.pt: default crop/weed model.
-- models/counting/yolov8n-100e.pt: longer-trained crop/weed model.
-- models/counting/yolov8s-comparison.pt: larger counting comparison.
-- models/species/yolov8n-50e.pt: four-species baseline.
-- models/species/yolov8n-100e.pt: preferred four-species model.
+All `.pt` files are configured for Git LFS:
 
-Generated runs belong in runs/ or outputs/; do not promote an entire run
-directory into Git.
+```gitattributes
+*.pt filter=lfs diff=lfs merge=lfs -text
+```
 
-## Validated counting settings
+New checkouts should run:
 
-- Confidence threshold: 0.25.
-- NMS IoU threshold: 0.3.
-- The original annotations have known gaps. Manual audits found that many
+```powershell
+git lfs install
+git lfs pull
+```
+
+Normal Git history contains small LFS pointers. The working tree must contain
+the complete model binaries before inference. `YOLO(model_path)` only loads a
+local checkpoint and does not retrieve LFS objects.
+
+The deployed application checkpoints are:
+
+- `models/species/yolov8s_full.pt`
+- `models/broadleaf/yolo26m_broadleaf.pt`
+- `models/counting/yolov8n-100e.pt`
+
+Additional comparison and historical checkpoints are documented in
+`models/README.md`. Generated training runs belong under `runs/` or `outputs/`
+and must not be promoted wholesale into Git.
+
+## Evaluation guidance
+
+- Keep checkpoint, confidence, IoU, input size, dataset split, and dataset
+  version fixed when comparing results.
+- The established Crop & Weed Counting defaults are confidence `0.25`, IoU
+  `0.30`, and input size `640`.
+- The source annotations have known gaps. Manual audits found that some
   apparent false positives were real plants missing from the labels.
-- Raising confidence solely to improve raw precision can worsen real counting
-  accuracy through undercounting.
+- Raising confidence solely to improve measured precision can increase
+  undercounting.
+- Unit tests that mock YOLO verify logic and argument forwarding; they do not
+  establish real-model accuracy, GPU compatibility, or successful deployment.
+- Real-model evaluation should use an independent representative test set
+  whenever possible.
 
-The specialized scripts under scripts/ preserve the original audit and
-corrected-count workflows.
+Broadleaf dataset construction, fine-tuning, and evaluation details are kept
+under `docs/`, including `MODEL_DEVELOPMENT_REPORT.md`,
+`SPARSE_MIXED_FINETUNING.md`, and `CROPANDWEED_BROADLEAF_MAPPING.md`.
 
-## Known follow-up work
+## Setup and testing
 
-- Compare curated checkpoints on one fixed independent test split and document
-  the selected production model.
-- Improve separation among wild oat, brome grass, and barley grass.
-- Add automated smoke coverage for the Streamlit inference path.
-- Decide whether large curated checkpoints should move to Git LFS or release
-  assets before the repository grows further.
+The standard Windows development setup is:
+
+```powershell
+conda activate plant-count
+python -m pip install -e ".[app,tools]" --no-build-isolation
+python -m pip install -r requirements-dev.txt
+```
+
+Run the fast automated test suite with:
+
+```powershell
+python -m pytest -v -m "not slow and not model and not acceptance"
+```
+
+Run real-model or acceptance checks separately and record the checkpoint and
+inference settings used.
 
 ## Deployment
 
-A test deployment exists at
-[crop-weed-counter-afridi.streamlit.app](https://crop-weed-counter-afridi.streamlit.app/).
-Deployment functionality and model accuracy should be verified independently.
+The project uses a single Streamlit and YOLO application rather than a separate
+model API service. A deployment must retrieve the real Git LFS objects before
+the application starts. Repository tracking alone does not prove that a hosted
+environment loaded the weights or completed inference successfully.
+
+The historical Streamlit deployment may use a deployment-specific branch and
+may not match the latest `main`. Verify its branch, logs, checkpoint sizes,
+available model options, and one real inference before treating it as current.
+
+## Known follow-up work
+
+- Build and preserve a genuinely independent test set for final comparison.
+- Expand under-represented species and target-domain examples.
+- Continue resolving annotation gaps that distort precision and counting
+  measurements.
+- Add automated Streamlit smoke or acceptance coverage without making the
+  default unit suite load real weights.
+- Keep `README.md`, `models/README.md`, and this handover aligned when
+  application models or defaults change.
