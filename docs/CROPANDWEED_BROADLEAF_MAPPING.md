@@ -14,6 +14,42 @@ The counts below describe the downloaded official release before splitting.
 The generated dataset also contains `mapping_summary.json` and
 `split_manifest.csv` with the exact post-conversion and per-split counts.
 
+## Dataset provenance
+
+The external data is **The CropAndWeed Dataset**, a large-scale precision
+agriculture dataset containing real-world crop and weed images with bounding
+boxes, semantic masks, stem positions, and acquisition metadata.
+
+| Item | Source used by this project |
+| --- | --- |
+| Dataset | [The CropAndWeed Dataset](https://github.com/cropandweed/cropandweed-dataset) |
+| Publisher | AIT Austrian Institute of Technology GmbH and the dataset authors |
+| Publication | [Steininger et al., “The CropAndWeed Dataset: A Multi-Modal Learning Approach for Efficient Crop and Weed Manipulation,” WACV 2023](https://openaccess.thecvf.com/content/WACV2023/papers/Steininger_The_CropAndWeed_Dataset_A_Multi-Modal_Learning_Approach_for_Efficient_Crop_WACV_2023_paper.pdf) |
+| Source-code revision used locally | `e471c47971af431f4fb8d7463f6b4c9e2b3b35fa` |
+| Official acquisition method | `cnw/setup.py` from the source repository |
+| Archive host used by that script | `https://vitro-testing.com/wp-content/uploads/2022/12/` |
+| Local source location | `external/cropandweed-dataset/data_raw` |
+| Derived YOLO location | `data/cropandweed_broadleaf` |
+
+The official setup script downloads one annotation archive and four image
+archives, extracts them, and generates the predefined dataset mappings. The
+project then uses `scripts/prepare_cropandweed_broadleaf.py` to build the
+one-class YOLO dataset described below. The external checkout, downloaded
+images, and derived dataset are intentionally excluded from this Git
+repository.
+
+The upstream licence permits academic and non-academic use only for
+**non-commercial** purposes. It requires attribution and prohibits
+redistribution of the original dataset or modified versions. Before sharing
+data, publishing derived artifacts, or using them in a deployment, review the
+current [upstream licence](https://github.com/cropandweed/cropandweed-dataset/blob/main/LICENCE).
+Trained weights are derivative artifacts, but their permitted use must still
+be assessed against the upstream non-commercial restriction.
+
+For reproducibility, retain the upstream commit identifier, acquisition date,
+and archive checksums with any future dataset build. The download host is an
+external service and may change independently of this repository.
+
 ## Classes mapped to `broadleaf_weed`
 
 | Source ID | CropAndWeed name | Instances | Images |
